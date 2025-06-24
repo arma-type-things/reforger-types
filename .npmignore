@@ -1,0 +1,23 @@
+# Source files (we include them for reference)
+# src/
+
+# Development files
+tsconfig.json
+.gitignore
+*.log
+
+# Tests
+test/
+tests/
+__tests__/
+
+# Documentation source
+docs/
+
+# Editor files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db

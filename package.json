@@ -1,0 +1,49 @@
+{
+  "name": "reforger-types",
+  "version": "0.0.1-alpha.1",
+  "type": "module",
+  "description": "TypeScript definitions for Arma Reforger server configuration",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist/**/*",
+    "src/**/*",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "prebuild": "npm run clean",
+    "prepublishOnly": "npm run build",
+    "dev": "tsc --watch",
+    "test": "npm run test:node",
+    "test:bun": "bun test test/servers.bun.test.ts",
+    "test:node": "node --test test/servers.node.test.js"
+  },
+  "keywords": [
+    "arma",
+    "reforger",
+    "typescript",
+    "types",
+    "server",
+    "configuration"
+  ],
+  "author": "tsal <tsalaroth@gmail.com>",
+  "license": "LGPL-3.0-only",
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=16"
+  }
+}
