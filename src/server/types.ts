@@ -23,6 +23,7 @@ export interface Mod {
   modId: string;
   name: string;
   version: string;
+  required?: boolean;
 }
 
 export enum SupportedPlatform {
@@ -40,6 +41,7 @@ export interface GameProperties {
   battlEye: boolean;
   VONDisableUI: boolean;
   VONDisableDirectSpeechUI: boolean;
+  VONCanTransmitCrossFaction?: boolean;
   missionHeader: MissionHeader;
 }
 
@@ -55,6 +57,7 @@ export interface GameConfig {
   supportedPlatforms: SupportedPlatform[];
   gameProperties: GameProperties;
   mods: Mod[];
+  modsRequiredByDefault?: boolean;
 }
 
 export interface OperatingConfig {

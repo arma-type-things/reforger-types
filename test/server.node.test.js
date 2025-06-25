@@ -256,7 +256,7 @@ describe('High-Level Usage - Functional Approach', () => {
     assert.strictEqual(config.game.name, 'Minimal Server');
     assert.strictEqual(config.bindAddress, '0.0.0.0'); // Default
     assert.strictEqual(config.bindPort, 2001); // Default
-    assert.strictEqual(config.game.maxPlayers, 32); // Default
+    assert.strictEqual(config.game.maxPlayers, 64); // Default (updated to match wiki)
     assert.strictEqual(config.operating.playerSaveTime, 120); // Default
   });
 
@@ -296,7 +296,7 @@ describe('High-Level Usage - Default Values Validation', () => {
     const rconConfig = createDefaultRconConfig(2001, 'test-password');
 
     // Game config defaults
-    assert.strictEqual(gameConfig.maxPlayers, 32);
+    assert.strictEqual(gameConfig.maxPlayers, 64); // Updated to match wiki default
     assert.strictEqual(gameConfig.visible, true);
     assert.strictEqual(gameConfig.crossPlatform, false);
     assert.strictEqual(gameConfig.supportedPlatforms.length, 1);
