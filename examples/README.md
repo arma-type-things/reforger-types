@@ -76,7 +76,6 @@ Each example directory contains:
 ## 📖 Documentation
 
 - **[Main README](../README.md)** - Library overview, installation, and quick start guide
-- **[API Documentation](../docs/)** - Complete configuration reference and API documentation
 - **Integration Tests** - See `../test/integration/` for automated example testing
 
 ## 💡 Contributing Examples
