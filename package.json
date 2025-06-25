@@ -2,7 +2,7 @@
   "name": "reforger-types",
   "version": "0.0.1-alpha.1",
   "type": "module",
-  "description": "TypeScript definitions for Arma Reforger server configuration",
+  "description": "TypeScript definitions for Arma Reforger server configuration and mission resource references",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -26,9 +26,9 @@
     "prebuild": "npm run clean",
     "prepublishOnly": "npm run build",
     "dev": "tsc --watch",
-    "test": "npm run test:node",
-    "test:bun": "bun test test/servers.bun.test.ts",
-    "test:node": "node --test test/servers.node.test.js"
+    "test": "npm run test:node && npm run test:bun",
+    "test:bun": "bun test test/*.bun.test.ts",
+    "test:node": "node --test test/*.node.test.js"
   },
   "keywords": [
     "arma",

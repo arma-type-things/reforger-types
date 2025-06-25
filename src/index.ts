@@ -1,9 +1,10 @@
 // Reforger Types - TypeScript definitions for Arma Reforger server configuration
 
 import * as servers from './servers/index.js';
+import * as modules from './modules/index.js';
 
-// Export the namespace
-export { servers };
+// Export the namespaces
+export { servers, modules };
 
 // Re-export for backward compatibility and convenience
 export const SupportedPlatform = servers.SupportedPlatform;
@@ -31,3 +32,16 @@ export type GameConfig = servers.GameConfig;
 export type OperatingConfig = servers.OperatingConfig;
 export type ServerConfig = servers.ServerConfig;
 export type IServerConfigBuilder = servers.IServerConfigBuilder;
+
+// Export module utilities for convenience
+export const MissionResourceReference = modules.MissionResourceReference;
+export const ScenarioId = modules.ScenarioId;
+export const OfficialScenarios = modules.OfficialScenarios;
+export const createDefaultScenarioId = modules.createDefaultScenarioId;
+export const createScenarioId = modules.createScenarioId;
+export const parseScenarioId = modules.parseScenarioId;
+
+// Type-only exports for modules
+export type MissionResourceId = modules.MissionResourceId;
+export type MissionPath = modules.MissionPath;
+export type OfficialScenarioName = modules.OfficialScenarioName;
