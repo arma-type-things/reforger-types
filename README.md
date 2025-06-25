@@ -149,3 +149,7 @@ const result = parseServerConfig(jsonString);
 ```
 
 For detailed API documentation, see the TypeScript definitions and examples folder.
+
+## Contributing / Local Development
+
+For local development, you'll need Node.js 22 or higher and Bun to run the test suite.
