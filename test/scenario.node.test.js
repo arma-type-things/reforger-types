@@ -208,7 +208,7 @@ describe('Automatic String Conversion', () => {
   });
 });
 
-describe('Interoperability with Servers Namespace', () => {
+describe('Interoperability with Server Namespace', () => {
   test('should work with existing server builder pattern', async () => {
     // Import server types
     const { ServerConfigBuilder } = await import('../dist/index.js');

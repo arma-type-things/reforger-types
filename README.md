@@ -472,7 +472,7 @@ OfficialScenarios.TUTORIAL                  // Tutorial/training
 ### Core Interfaces
 
 ```typescript
-import { servers } from 'reforger-types';
+import { server } from 'reforger-types';
 
 // Complete server configuration
 interface ServerConfig {
@@ -514,9 +514,9 @@ enum SupportedPlatform {
 ```typescript
 
 // Manual configuration (if you prefer full control)
-import { servers } from 'reforger-types';
+import { server } from 'reforger-types';
 
-const serverConfig: servers.ServerConfig = {
+const serverConfig: server.ServerConfig = {
   bindAddress: "0.0.0.0",
   bindPort: 2001,
   publicAddress: "0.0.0.0", 
@@ -543,9 +543,9 @@ const serverConfig: servers.ServerConfig = {
     visible: true,
     crossPlatform: true,
     supportedPlatforms: [
-      servers.SupportedPlatform.PC,
-      servers.SupportedPlatform.XBOX,
-      servers.SupportedPlatform.PLAYSTATION
+      server.SupportedPlatform.PC,
+      server.SupportedPlatform.XBOX,
+      server.SupportedPlatform.PLAYSTATION
     ],
     gameProperties: {
       serverMaxViewDistance: 4000,
