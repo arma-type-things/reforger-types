@@ -87,7 +87,7 @@ export class ServerConfigBuilder implements IServerConfigBuilder {
   private _publicPort?: number;
   private _serverName: string = "Default Server";
   private _scenarioId: string = "";
-  private _maxPlayers: number = 32;
+  private _maxPlayers: number = 64;
   private _crossPlatform: boolean = false;
   private _gamePassword: string = "";
   private _adminPassword: string = "";
@@ -297,7 +297,7 @@ export class ServerConfigBuilder implements IServerConfigBuilder {
     this._publicPort = undefined;
     this._serverName = "Default Server";
     this._scenarioId = "";
-    this._maxPlayers = 32;
+    this._maxPlayers = 64;
     this._crossPlatform = false;
     this._gamePassword = "";
     this._adminPassword = "";

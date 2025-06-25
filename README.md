@@ -11,9 +11,10 @@ npm install reforger-types
 ## Examples
 
 See the [examples folder](./examples) for complete implementations:
-- **Discord Bot** - Slash commands for server configuration  
-- **Config Validator** - CLI validation tool
-- **Parser Example** - Configuration parsing and validation
+- **[Discord Bot](./examples/discord-bot/)** - Slash commands for server configuration  
+- **[Config Validator](./examples/config-validator/)** - CLI validation tool
+- **[Parser Example](./examples/parser-example.js)** - Configuration parsing and validation
+- **[Mod Extensions Example](./examples/mod-extensions-example.js)** - Workshop URL and mod utilities
 
 ## Quick Start
 
@@ -38,32 +39,35 @@ console.log(JSON.stringify(config, null, 2));
 import { ServerConfigBuilder, OfficialScenarios } from 'reforger-types';
 
 const config = new ServerConfigBuilder('My Server', OfficialScenarios.CONFLICT_EVERON)
-  .setMaxPlayers(64)
   .setBindPort(2001)
   .setCrossPlatform(true)
   .setRconPassword('admin123')
+  .setGamePassword('server123')
+  .addModsFromUrls([
+    'https://reforger.armaplatform.com/workshop/A1B2C3D4E5F6G7H8-enhanced-realism'
+  ])
   .build();
 ```
 
 ### Parse & Validate
 
 ```typescript
-import { Parser, parse } from 'reforger-types';
+import { parse } from 'reforger-types';
 
-// Using the convenience function
+// Simple validation (recommended)
 const result = parse(configObject);
 if (result.success) {
   console.log('✅ Valid configuration');
   console.log('Server:', result.data.game.name);
 } else {
   console.error('❌ Errors:', result.errors);
+  console.error('❌ Validation Issues:', result.validationErrors);
 }
 
-// Using Parser class with validation
-const parser = new Parser();
-const validatedResult = parser.parse(configObject, {
+// Custom validation options
+const customResult = parse(configObject, {
   validate: true,
-  ignore_warnings: ['EMPTY_ADMIN_PASSWORD']
+  ignore_warnings: ['EMPTY_ADMIN_PASSWORD', 'WEAK_RCON_PASSWORD']
 });
 ```
 
@@ -78,7 +82,6 @@ import {
   ServerConfigBuilder,
   
   // Parsing & validation
-  Parser,
   parse,
   
   // Constants & enums
@@ -88,31 +91,32 @@ import {
   // Mod utilities
   createExtendedMod,
   createModExtendedFromUrl,
+  modIdFromUrl,
+  isValidModId,
   
   // Types (TypeScript only)
   ServerConfig,
   GameConfig,
-  Mod
+  Mod,
+  ModExtended
 } from 'reforger-types';
 ```
 
-**Tip**: All core functions include JSDoc comments. Use your IDE's IntelliSense to explore available options and parameters.
+**Tip**: All core functions include comprehensive JSDoc comments. Use your IDE's IntelliSense to explore available options, parameters, and examples.
 
 ## Key Concepts
 
 - **Port Allocation**: Base port + 1 (A2S) + 2 (RCON)
 - **Cross-Platform**: Set `crossPlatform: true` or configure `supportedPlatforms` 
 - **Validation**: Distinguishes between hard errors and warnings
-- **Mod URLs**: Automatic Steam Workshop URL generation
+- **Mod URLs**: Automatic Steam Workshop URL generation and parsing
+- **Type Safety**: Full TypeScript support with strict typing
 
-## Source Code
+## Documentation & Source Code
 
-This library is designed for direct source exploration:
-
-- [`src/index.ts`](./src/index.ts) - Main exports and type re-exports
-- [`src/server/`](./src/server/) - Server configuration types and utilities
-- [`src/scenario/`](./src/scenario/) - Scenario and mission utilities  
-- [`docs/server-config-wiki.md`](./docs/server-config-wiki.md) - Complete configuration reference
+- **[Examples](./examples/)** - Complete working examples and tutorials
+- **[Wiki Documentation](./docs/server-config-wiki.md)** - Complete configuration reference
+- **[Source Code](./src/)** - Library source code designed for exploration
 
 ## Development
 

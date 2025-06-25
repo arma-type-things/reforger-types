@@ -95,7 +95,7 @@ function sanitizeUrlName(name: string): string {
  * @param url - Workshop URL
  * @returns Mod ID if valid, null otherwise
  */
-function modIdFromUrl(url: string): string | null {
+export function modIdFromUrl(url: string): string | null {
   const match = url.match(new RegExp(`${WORKSHOP_BASE_URL}\/([A-F0-9]+)-.*`));
   return match ? match[1] : null;
 }
@@ -204,6 +204,3 @@ export function toBaseMod(modExtended: ModExtended): BaseMod {
 export function toBaseModList(modsExtended: ModExtended[]): BaseMod[] {
   return modsExtended.map(mod => toBaseMod(mod));
 }
-
-// Export the internal function with the desired name
-export { modIdFromUrl };
