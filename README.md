@@ -467,162 +467,63 @@ OfficialScenarios.TUTORIAL                  // Tutorial/training
 
 ---
 
-## 🔍 TypeScript Types (Advanced)
+## 🔍 Configuration Parsing & Validation
 
-### Core Interfaces
+### Parse Existing Server Configurations
 
 ```typescript
-import { server } from 'reforger-types';
+import { parseServerConfig, validateServerConfig } from 'reforger-types';
 
-// Complete server configuration
-interface ServerConfig {
-  bindAddress: string;
-  bindPort: number;
-  publicAddress: string;
-  publicPort: number;
-  a2s: A2SConfig;           // Server query protocol
-  rcon: RconConfig;         // Remote console  
-  game: GameConfig;         // Game settings
-  operating: OperatingConfig; // Runtime settings
+// Parse from JSON file
+const configJson = await fs.readFile('./server-config.json', 'utf8');
+const result = parseServerConfig(configJson);
+
+if (result.success) {
+  console.log('✅ Configuration valid:', result.data.game.name);
+  console.log('Server will run on port:', result.data.bindPort);
+} else {
+  console.error('❌ Configuration errors:', result.errors);
+  console.warn('⚠️ Warnings:', result.warnings);
 }
 
-// Game-specific configuration
-interface GameConfig {
-  name: string;             // Server display name
-  password: string;         // Join password
-  passwordAdmin: string;    // Admin password
-  admins: string[];         // Admin player IDs
-  scenarioId: string;       // Mission scenario ID
-  maxPlayers: number;       // Max player count (1-64)
-  visible: boolean;         // Show in server browser
-  crossPlatform: boolean;   // Allow console players
-  supportedPlatforms: SupportedPlatform[];
-  gameProperties: GameProperties;
-  mods: Mod[];
-}
+// Validate an existing config object
+const existingConfig = { /* your config */ };
+const validation = validateServerConfig(existingConfig);
 
-// Supported platforms
-enum SupportedPlatform {
-  PC = "PLATFORM_PC",
-  XBOX = "PLATFORM_XBL", 
-  PLAYSTATION = "PLATFORM_PSN"
+if (!validation.success) {
+  console.error('Invalid configuration:', validation.errors);
 }
 ```
 
-### Direct Type Usage
+### Parser Options
 
 ```typescript
+import { ServerConfigParser } from 'reforger-types';
 
-// Manual configuration (if you prefer full control)
-import { server } from 'reforger-types';
+// Create parser with custom options
+const parser = new ServerConfigParser({
+  strict: true,           // Fail on unknown properties
+  allowDefaults: true,    // Fill in missing properties with defaults
+  validateRanges: true    // Validate numeric ranges (ports, player counts)
+});
 
-const serverConfig: server.ServerConfig = {
-  bindAddress: "0.0.0.0",
-  bindPort: 2001,
-  publicAddress: "0.0.0.0", 
-  publicPort: 2001,
-  a2s: {
-    address: "0.0.0.0",
-    port: 2002                    // Automatically basePort + 1
-  },
-  rcon: {
-    address: "127.0.0.1",
-    port: 2003,                   // Automatically basePort + 2
-    password: "your-password",
-    permission: "admin",
-    blacklist: [],
-    whitelist: []
-  },
-  game: {
-    name: "My Manual Server",
-    password: "",
-    passwordAdmin: "admin-password",
-    admins: [],
-    scenarioId: "{ECC61978EDCC2B5A}Missions/23_Campaign.conf",
-    maxPlayers: 64,
-    visible: true,
-    crossPlatform: true,
-    supportedPlatforms: [
-      server.SupportedPlatform.PC,
-      server.SupportedPlatform.XBOX,
-      server.SupportedPlatform.PLAYSTATION
-    ],
-    gameProperties: {
-      serverMaxViewDistance: 4000,
-      serverMinGrassDistance: 50,
-      networkViewDistance: 1500,
-      disableThirdPerson: false,
-      fastValidation: true,
-      battlEye: true,
-      VONDisableUI: false,
-      VONDisableDirectSpeechUI: false,
-      missionHeader: {
-        m_sName: "My Mission",
-        m_sAuthor: "Author Name", 
-        m_sSaveFileName: "saveExample"
-      }
-    },
-    mods: []
-  },
-  operating: {
-    lobbyPlayerSynchronise: true,
-    playerSaveTime: 120,
-    aiLimit: -1,
-    slotReservationTimeout: 60
-  }
-};
+const result = parser.parseServerConfig(jsonData);
 ```
 
----
-
-## 🚀 Deployment Examples
-
-### Save Configuration to File
+### Individual Component Parsing
 
 ```typescript
-import fs from 'fs';
-import { createDefaultServerConfig, OfficialScenarios } from 'reforger-types';
+// Parse just the game configuration section
+const gameResult = parser.parseGameConfig({
+  name: "My Server",
+  maxPlayers: 64,
+  scenarioId: "{ECC61978EDCC2B5A}Missions/23_Campaign.conf"
+});
 
-const config = createDefaultServerConfig('My Server', OfficialScenarios.CONFLICT_EVERON);
-
-// Save as JSON file for Arma Reforger server
-fs.writeFileSync('./serverconfig.json', JSON.stringify(config, null, 2));
-console.log('✅ Server configuration saved to serverconfig.json');
-```
-
-### Environment-Based Configuration
-
-```typescript
-import { ServerConfigBuilder, OfficialScenarios } from 'reforger-types';
-
-// Safe environment variable mapping
-const ENV_SCENARIOS = {
-  'CONFLICT_EVERON': OfficialScenarios.CONFLICT_EVERON,
-  'CONFLICT_ARLAND': OfficialScenarios.CONFLICT_ARLAND,
-  'CAH_MILITARY_BASE': OfficialScenarios.CAH_MILITARY_BASE,
-  'TUTORIAL': OfficialScenarios.TUTORIAL,
-} as const;
-
-function createServerFromEnv() {
-  const scenarioKey = process.env.SCENARIO || 'CONFLICT_EVERON';
-  
-  // Validate environment scenario
-  if (!(scenarioKey in ENV_SCENARIOS)) {
-    throw new Error(`Invalid SCENARIO environment variable: ${scenarioKey}`);
-  }
-  
-  const config = new ServerConfigBuilder(
-    process.env.SERVER_NAME || 'Default Server',
-    ENV_SCENARIOS[scenarioKey as keyof typeof ENV_SCENARIOS]
-  )
-    .setBindAddress(process.env.BIND_ADDRESS || '0.0.0.0')
-    .setBindPort(parseInt(process.env.BIND_PORT || '2001'))
-    .setMaxPlayers(parseInt(process.env.MAX_PLAYERS || '32'))
-    .setCrossPlatform(process.env.CROSS_PLATFORM === 'true')
-    .setRconPassword(process.env.RCON_PASSWORD || '')
-    .setAdminPassword(process.env.ADMIN_PASSWORD || '')
-    .build();
-    
-  return config;
-}
+// Parse game properties
+const propsResult = parser.parseGameProperties({
+  serverMaxViewDistance: 1600,
+  battlEye: true,
+  fastValidation: true
+});
 ```

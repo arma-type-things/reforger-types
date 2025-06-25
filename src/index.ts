@@ -21,6 +21,11 @@ export const createDefaultMissionHeader = server.createDefaultMissionHeader;
 // Export builder pattern classes
 export const ServerConfigBuilder = server.ServerConfigBuilder;
 
+// Export parser functions
+export const ServerConfigParser = server.ServerConfigParser;
+export const parseServerConfig = server.parseServerConfig;
+export const validateServerConfig = server.validateServerConfig;
+
 // Type-only exports for TypeScript users
 export type A2SConfig = server.A2SConfig;
 export type RconConfig = server.RconConfig;
@@ -32,6 +37,8 @@ export type GameConfig = server.GameConfig;
 export type OperatingConfig = server.OperatingConfig;
 export type ServerConfig = server.ServerConfig;
 export type IServerConfigBuilder = server.IServerConfigBuilder;
+export type ParseResult<T> = server.ParseResult<T>;
+export type ParserOptions = server.ParserOptions;
 
 // Export scenario utilities for convenience
 export const MissionResourceReference = scenario.MissionResourceReference;

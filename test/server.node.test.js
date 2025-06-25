@@ -332,3 +332,38 @@ describe('Cross-Platform Logic Validation', () => {
     assert.ok(config.supportedPlatforms.includes(SupportedPlatform.PLAYSTATION));
   });
 });
+
+describe('Parser Integration', () => {
+  test('should export parser functions from main index', async () => {
+    const { 
+      ServerConfigParser,
+      parseServerConfig,
+      validateServerConfig 
+    } = await import('../dist/index.js');
+    
+    assert.strictEqual(typeof ServerConfigParser, 'function');
+    assert.strictEqual(typeof parseServerConfig, 'function');
+    assert.strictEqual(typeof validateServerConfig, 'function');
+  });
+
+  test('should parse valid configuration', async () => {
+    const { parseServerConfig, createDefaultServerConfig, OfficialScenarios } = await import('../dist/index.js');
+    
+    const config = createDefaultServerConfig('Parser Test', OfficialScenarios.TUTORIAL);
+    const result = parseServerConfig(config);
+    
+    assert.strictEqual(result.success, true);
+    assert.strictEqual(result.data.game.name, 'Parser Test');
+    assert.strictEqual(result.errors.length, 0);
+  });
+
+  test('should validate configuration', async () => {
+    const { validateServerConfig, createDefaultServerConfig, OfficialScenarios } = await import('../dist/index.js');
+    
+    const config = createDefaultServerConfig('Validation Test', OfficialScenarios.CAH_CASTLE);
+    const result = validateServerConfig(config);
+    
+    assert.strictEqual(result.success, true);
+    assert.strictEqual(result.errors.length, 0);
+  });
+});
