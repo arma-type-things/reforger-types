@@ -1,9 +1,9 @@
-// ES Module Export Tests for Modules
+// ES Module Export Tests for Scenario
 import { test, describe } from 'node:test';
 import assert from 'node:assert';
 import { 
   // Namespace export
-  modules,
+  scenario,
   // Direct exports
   MissionResourceReference,
   ScenarioId,
@@ -13,12 +13,12 @@ import {
   parseScenarioId
 } from '../dist/index.js';
 
-describe('Modules ES Module Exports', () => {
-  test('should export modules namespace', () => {
-    assert.strictEqual(typeof modules, 'object');
-    assert.strictEqual(typeof modules.MissionResourceReference, 'function');
-    assert.strictEqual(typeof modules.ScenarioId, 'function');
-    assert.strictEqual(typeof modules.createDefaultScenarioId, 'function');
+describe('Scenario ES Module Exports', () => {
+  test('should export scenario namespace', () => {
+    assert.strictEqual(typeof scenario, 'object');
+    assert.strictEqual(typeof scenario.MissionResourceReference, 'function');
+    assert.strictEqual(typeof scenario.ScenarioId, 'function');
+    assert.strictEqual(typeof scenario.createDefaultScenarioId, 'function');
   });
 
   test('should export direct convenience classes and functions', () => {
@@ -31,7 +31,7 @@ describe('Modules ES Module Exports', () => {
   });
 });
 
-describe('High-Level Module Usage', () => {
+describe('High-Level Scenario Usage', () => {
   test('should create and work with scenario IDs', () => {
     // Test default scenario creation
     const defaultScenario = createDefaultScenarioId();

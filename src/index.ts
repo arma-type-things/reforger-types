@@ -1,10 +1,10 @@
 // Reforger Types - TypeScript definitions for Arma Reforger server configuration
 
 import * as servers from './servers/index.js';
-import * as modules from './modules/index.js';
+import * as scenario from './scenario/index.js';
 
 // Export the namespaces
-export { servers, modules };
+export { servers, scenario };
 
 // Re-export for backward compatibility and convenience
 export const SupportedPlatform = servers.SupportedPlatform;
@@ -33,15 +33,15 @@ export type OperatingConfig = servers.OperatingConfig;
 export type ServerConfig = servers.ServerConfig;
 export type IServerConfigBuilder = servers.IServerConfigBuilder;
 
-// Export module utilities for convenience
-export const MissionResourceReference = modules.MissionResourceReference;
-export const ScenarioId = modules.ScenarioId;
-export const OfficialScenarios = modules.OfficialScenarios;
-export const createDefaultScenarioId = modules.createDefaultScenarioId;
-export const createScenarioId = modules.createScenarioId;
-export const parseScenarioId = modules.parseScenarioId;
+// Export scenario utilities for convenience
+export const MissionResourceReference = scenario.MissionResourceReference;
+export const ScenarioId = scenario.ScenarioId;
+export const OfficialScenarios = scenario.OfficialScenarios;
+export const createDefaultScenarioId = scenario.createDefaultScenarioId;
+export const createScenarioId = scenario.createScenarioId;
+export const parseScenarioId = scenario.parseScenarioId;
 
-// Type-only exports for modules
-export type MissionResourceId = modules.MissionResourceId;
-export type MissionPath = modules.MissionPath;
-export type OfficialScenarioName = modules.OfficialScenarioName;
+// Type-only exports for scenarios
+export type MissionResourceId = scenario.MissionResourceId;
+export type MissionPath = scenario.MissionPath;
+export type OfficialScenarioName = scenario.OfficialScenarioName;
