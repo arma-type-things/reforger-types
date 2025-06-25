@@ -3,7 +3,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert';
 import { 
   // Namespace export
-  servers,
+  server,
   // Direct exports
   ServerConfigBuilder, 
   createDefaultServerConfig,
@@ -17,11 +17,11 @@ import {
 } from '../dist/index.js';
 
 describe('ES Module Exports', () => {
-  test('should export servers namespace', () => {
-    assert.strictEqual(typeof servers, 'object');
-    assert.strictEqual(typeof servers.ServerConfigBuilder, 'function');
-    assert.strictEqual(typeof servers.createDefaultServerConfig, 'function');
-    assert.strictEqual(typeof servers.SupportedPlatform, 'object');
+  test('should export server namespace', () => {
+    assert.strictEqual(typeof server, 'object');
+    assert.strictEqual(typeof server.ServerConfigBuilder, 'function');
+    assert.strictEqual(typeof server.createDefaultServerConfig, 'function');
+    assert.strictEqual(typeof server.SupportedPlatform, 'object');
   });
 
   test('should export direct convenience functions', () => {
@@ -256,7 +256,7 @@ describe('High-Level Usage - Functional Approach', () => {
     assert.strictEqual(config.game.name, 'Minimal Server');
     assert.strictEqual(config.bindAddress, '0.0.0.0'); // Default
     assert.strictEqual(config.bindPort, 2001); // Default
-    assert.strictEqual(config.game.maxPlayers, 32); // Default
+    assert.strictEqual(config.game.maxPlayers, 64); // Default (updated to match wiki)
     assert.strictEqual(config.operating.playerSaveTime, 120); // Default
   });
 
@@ -296,7 +296,7 @@ describe('High-Level Usage - Default Values Validation', () => {
     const rconConfig = createDefaultRconConfig(2001, 'test-password');
 
     // Game config defaults
-    assert.strictEqual(gameConfig.maxPlayers, 32);
+    assert.strictEqual(gameConfig.maxPlayers, 64); // Updated to match wiki default
     assert.strictEqual(gameConfig.visible, true);
     assert.strictEqual(gameConfig.crossPlatform, false);
     assert.strictEqual(gameConfig.supportedPlatforms.length, 1);
@@ -330,5 +330,40 @@ describe('Cross-Platform Logic Validation', () => {
     assert.ok(config.supportedPlatforms.includes(SupportedPlatform.PC));
     assert.ok(config.supportedPlatforms.includes(SupportedPlatform.XBOX));
     assert.ok(config.supportedPlatforms.includes(SupportedPlatform.PLAYSTATION));
+  });
+});
+
+describe('Parser Integration', () => {
+  test('should export parser functions from main index', async () => {
+    const { 
+      ServerConfigParser,
+      parseServerConfig,
+      validateServerConfig 
+    } = await import('../dist/index.js');
+    
+    assert.strictEqual(typeof ServerConfigParser, 'function');
+    assert.strictEqual(typeof parseServerConfig, 'function');
+    assert.strictEqual(typeof validateServerConfig, 'function');
+  });
+
+  test('should parse valid configuration', async () => {
+    const { parseServerConfig, createDefaultServerConfig, OfficialScenarios } = await import('../dist/index.js');
+    
+    const config = createDefaultServerConfig('Parser Test', OfficialScenarios.TUTORIAL);
+    const result = parseServerConfig(config);
+    
+    assert.strictEqual(result.success, true);
+    assert.strictEqual(result.data.game.name, 'Parser Test');
+    assert.strictEqual(result.errors.length, 0);
+  });
+
+  test('should validate configuration', async () => {
+    const { validateServerConfig, createDefaultServerConfig, OfficialScenarios } = await import('../dist/index.js');
+    
+    const config = createDefaultServerConfig('Validation Test', OfficialScenarios.CAH_CASTLE);
+    const result = validateServerConfig(config);
+    
+    assert.strictEqual(result.success, true);
+    assert.strictEqual(result.errors.length, 0);
   });
 });

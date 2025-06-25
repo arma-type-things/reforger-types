@@ -1,37 +1,44 @@
 // Reforger Types - TypeScript definitions for Arma Reforger server configuration
 
-import * as servers from './servers/index.js';
+import * as server from './server/index.js';
 import * as scenario from './scenario/index.js';
 
 // Export the namespaces
-export { servers, scenario };
+export { server, scenario };
 
 // Re-export for backward compatibility and convenience
-export const SupportedPlatform = servers.SupportedPlatform;
+export const SupportedPlatform = server.SupportedPlatform;
 
 // Export default initializer functions for convenience
-export const createDefaultServerConfig = servers.createDefaultServerConfig;
-export const createDefaultGameConfig = servers.createDefaultGameConfig;
-export const createDefaultGameProperties = servers.createDefaultGameProperties;
-export const createDefaultOperatingConfig = servers.createDefaultOperatingConfig;
-export const createDefaultA2SConfig = servers.createDefaultA2SConfig;
-export const createDefaultRconConfig = servers.createDefaultRconConfig;
-export const createDefaultMissionHeader = servers.createDefaultMissionHeader;
+export const createDefaultServerConfig = server.createDefaultServerConfig;
+export const createDefaultGameConfig = server.createDefaultGameConfig;
+export const createDefaultGameProperties = server.createDefaultGameProperties;
+export const createDefaultOperatingConfig = server.createDefaultOperatingConfig;
+export const createDefaultA2SConfig = server.createDefaultA2SConfig;
+export const createDefaultRconConfig = server.createDefaultRconConfig;
+export const createDefaultMissionHeader = server.createDefaultMissionHeader;
 
 // Export builder pattern classes
-export const ServerConfigBuilder = servers.ServerConfigBuilder;
+export const ServerConfigBuilder = server.ServerConfigBuilder;
+
+// Export parser functions
+export const ServerConfigParser = server.ServerConfigParser;
+export const parseServerConfig = server.parseServerConfig;
+export const validateServerConfig = server.validateServerConfig;
 
 // Type-only exports for TypeScript users
-export type A2SConfig = servers.A2SConfig;
-export type RconConfig = servers.RconConfig;
-export type MissionHeader = servers.MissionHeader;
-export type MissionHeaderValue = servers.MissionHeaderValue;
-export type Mod = servers.Mod;
-export type GameProperties = servers.GameProperties;
-export type GameConfig = servers.GameConfig;
-export type OperatingConfig = servers.OperatingConfig;
-export type ServerConfig = servers.ServerConfig;
-export type IServerConfigBuilder = servers.IServerConfigBuilder;
+export type A2SConfig = server.A2SConfig;
+export type RconConfig = server.RconConfig;
+export type MissionHeader = server.MissionHeader;
+export type MissionHeaderValue = server.MissionHeaderValue;
+export type Mod = server.Mod;
+export type GameProperties = server.GameProperties;
+export type GameConfig = server.GameConfig;
+export type OperatingConfig = server.OperatingConfig;
+export type ServerConfig = server.ServerConfig;
+export type IServerConfigBuilder = server.IServerConfigBuilder;
+export type ParseResult<T> = server.ParseResult<T>;
+export type ParserOptions = server.ParserOptions;
 
 // Export scenario utilities for convenience
 export const MissionResourceReference = scenario.MissionResourceReference;

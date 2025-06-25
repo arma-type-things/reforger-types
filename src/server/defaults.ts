@@ -38,14 +38,15 @@ export function createDefaultRconConfig(basePort: number, password: string = "")
 
 export function createDefaultGameProperties(): GameProperties {
   return {
-    serverMaxViewDistance: 4000,
-    serverMinGrassDistance: 50,
-    networkViewDistance: 1500,
+    serverMaxViewDistance: 1600,  // Wiki default: 1600
+    serverMinGrassDistance: 0,    // Wiki default: 0
+    networkViewDistance: 1500,    // Wiki default: 1500
     disableThirdPerson: false,
-    fastValidation: true,
-    battlEye: true,
+    fastValidation: true,         // Wiki default: true (since 0.9.6)
+    battlEye: true,              // Wiki default: true (since 0.9.8.73)
     VONDisableUI: false,
     VONDisableDirectSpeechUI: false,
+    VONCanTransmitCrossFaction: false, // Wiki default: false (v1.0.0+)
     missionHeader: createDefaultMissionHeader()
   };
 }
@@ -65,8 +66,8 @@ export function createDefaultGameConfig(
     passwordAdmin: "",
     admins: [],
     scenarioId: scenarioId,
-    maxPlayers: 32,
-    visible: true,
+    maxPlayers: 64,              // Wiki default: 64
+    visible: true,               // Wiki default: true (since 0.9.8.73)
     crossPlatform: crossPlatform,
     supportedPlatforms: supportedPlatforms,
     gameProperties: createDefaultGameProperties(),

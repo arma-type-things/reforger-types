@@ -1,0 +1,20 @@
+{
+  "name": "reforger-discord-bot-example",
+  "version": "1.0.0",
+  "description": "Discord bot example for creating Arma Reforger server configurations",
+  "main": "dist/bot.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/bot.js",
+    "dev": "tsc && node dist/bot.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.0.0",
+    "dotenv": "^16.0.0",
+    "reforger-types": "file:../.."
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}

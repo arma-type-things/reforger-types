@@ -7,7 +7,8 @@ import {
   createDefaultGameConfig,
   createDefaultOperatingConfig,
   createDefaultA2SConfig,
-  createDefaultRconConfig
+  createDefaultRconConfig,
+  createDefaultGameProperties
 } from '../src/index.js';
 
 describe('Port Allocation Edge Cases', () => {
@@ -99,7 +100,7 @@ describe('Default Value Edge Cases', () => {
   test('game config player limits', () => {
     // Test default max players is reasonable
     const defaultConfig = createDefaultGameConfig('Test', 'scenario', false);
-    expect(defaultConfig.maxPlayers).toBe(32);
+    expect(defaultConfig.maxPlayers).toBe(64); // Updated to match wiki default
     expect(defaultConfig.maxPlayers).toBeGreaterThan(0);
     expect(defaultConfig.maxPlayers).toBeLessThanOrEqual(256); // Reasonable upper bound
 
@@ -162,5 +163,22 @@ describe('Configuration Validation Edge Cases', () => {
     expect(config.bindPort).toBe(8000);
     expect(config.a2s.port).toBe(8001);
     expect(config.rcon.port).toBe(8002);
+  });
+});
+
+describe('New Properties from Wiki', () => {
+  test('VONCanTransmitCrossFaction defaults correctly', () => {
+    const gameProperties = createDefaultGameProperties();
+    expect(gameProperties.VONCanTransmitCrossFaction).toBe(false); // Wiki default: false
+  });
+
+  test('serverMinGrassDistance updated to wiki default', () => {
+    const gameProperties = createDefaultGameProperties();
+    expect(gameProperties.serverMinGrassDistance).toBe(0); // Wiki default: 0 (updated from 50)
+  });
+
+  test('serverMaxViewDistance updated to wiki default', () => {
+    const gameProperties = createDefaultGameProperties();
+    expect(gameProperties.serverMaxViewDistance).toBe(1600); // Wiki default: 1600 (updated from 4000)
   });
 });
