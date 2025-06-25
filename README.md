@@ -2,12 +2,6 @@
 
 TypeScript definitions for Arma Reforger server configuration and tooling. Perfect for building automation tools like Discord bots, web dashboards, or CLI utilities.
 
-## Quick Start
-
-```bash
-npm install reforger-types
-```
-
 ## For Automation Tool Builders
 
 This library is designed to help you build tools that automate Arma Reforger server management. Whether you're creating a Discord bot, web dashboard, or CLI tool, this guide will get you started quickly.
@@ -20,6 +14,19 @@ This library is designed to help you build tools that automate Arma Reforger ser
 - **Configuration Templates**: Generate reusable server configs
 
 ---
+
+## Quick Start
+
+```bash
+npm install reforger-types
+```
+
+## 📁 Examples
+
+See the [examples folder](https://github.com/arma-type-things/reforger-types/tree/main/examples) for complete implementations:
+
+- **Discord Bot** - Full slash command implementation for server configuration
+- **Parser Example** - Configuration parsing and validation demonstrations
 
 ## Simple Examples
 
@@ -61,94 +68,6 @@ const jsonConfig = JSON.stringify(config, null, 2);
 
 ---
 
-## 🤖 Discord Bot Example
-
-```typescript
-import { ServerConfigBuilder, OfficialScenarios } from 'reforger-types';
-
-// Discord slash command handler
-async function handleCreateServer(interaction) {
-  const serverName = interaction.options.getString('name');
-  const scenario = interaction.options.getString('scenario') || OfficialScenarios.CONFLICT_EVERON;
-  const maxPlayers = interaction.options.getInteger('players') || 32;
-  
-  try {
-    // Build configuration from user input
-    const config = new ServerConfigBuilder(serverName, scenario)
-      .setMaxPlayers(maxPlayers)
-      .setCrossPlatform(true)
-      .setRconPassword(generateRandomPassword())
-      .build();
-    
-    // Save or deploy the configuration
-    await saveServerConfig(config);
-    
-    await interaction.reply(`✅ Server "${serverName}" configured successfully!`);
-  } catch (error) {
-    await interaction.reply(`❌ Error: ${error.message}`);
-  }
-}
-
-function generateRandomPassword() {
-  return Math.random().toString(36).slice(-8);
-}
-```
-
-## 🌐 Web Dashboard Example
-
-```typescript
-import { createDefaultServerConfig, OfficialScenarios } from 'reforger-types';
-
-// Create a mapping for easier validation
-const SCENARIO_MAP = {
-  'conflict_everon': OfficialScenarios.CONFLICT_EVERON,
-  'conflict_arland': OfficialScenarios.CONFLICT_ARLAND,
-  'cah_military_base': OfficialScenarios.CAH_MILITARY_BASE,
-  'cah_castle': OfficialScenarios.CAH_CASTLE,
-  'tutorial': OfficialScenarios.TUTORIAL,
-  // Add more as needed
-} as const;
-
-// Express.js API endpoint
-app.post('/api/servers', async (req, res) => {
-  const { name, scenario, maxPlayers, crossPlatform } = req.body;
-  
-  try {
-    // Validate scenario exists
-    if (!(scenario in SCENARIO_MAP)) {
-      return res.status(400).json({ 
-        error: 'Invalid scenario',
-        availableScenarios: Object.keys(SCENARIO_MAP)
-      });
-    }
-    
-    // Create configuration
-    const config = createDefaultServerConfig(
-      name,
-      SCENARIO_MAP[scenario as keyof typeof SCENARIO_MAP],
-      '0.0.0.0',        // bind address
-      2001,             // port  
-      crossPlatform,    // cross-platform
-      req.body.rconPassword || ''
-    );
-    
-    // Customize based on user input
-    config.game.maxPlayers = maxPlayers || 32;
-    
-    // Save to database or deploy
-    const serverId = await deployServer(config);
-    
-    res.json({ 
-      success: true, 
-      serverId,
-      config: config 
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-```
-
 ## 📋 Available Official Scenarios
 
 ```typescript
@@ -179,351 +98,54 @@ const popularScenarios = {
 
 ---
 
-## 🔧 Advanced Configuration
+## 🔧 Configuration & Validation
 
-### Configuration Validation
-
+### Basic Validation
 ```typescript
-import { ServerConfigBuilder } from 'reforger-types';
+import { parseServerConfig, validateServerConfig } from 'reforger-types';
 
-function validateServerConfig(userInput) {
-  const errors = [];
-  
-  // Validate server name
-  if (!userInput.name || userInput.name.length < 3) {
-    errors.push('Server name must be at least 3 characters');
-  }
-  
-  // Validate player count
-  if (userInput.maxPlayers < 1 || userInput.maxPlayers > 64) {
-    errors.push('Max players must be between 1 and 64');
-  }
-  
-  // Validate ports
-  if (userInput.port < 1024 || userInput.port > 65535) {
-    errors.push('Port must be between 1024 and 65535');
-  }
-  
-  if (errors.length > 0) {
-    throw new Error(errors.join(', '));
-  }
-  
-  return true;
+// Parse and validate existing configurations
+const result = parseServerConfig(jsonString);
+if (result.success) {
+  console.log('✅ Valid configuration');
+} else {
+  console.error('❌ Errors:', result.errors);
 }
 ```
 
-### Dynamic Server Templates
-
+### Port Management
 ```typescript
-import { ServerConfigBuilder, OfficialScenarios } from 'reforger-types';
-
-// Predefined server templates for easy deployment
-const ServerTemplates = {
-  // Beginner-friendly server
-  BEGINNER: (name: string) => new ServerConfigBuilder(name, OfficialScenarios.TUTORIAL)
-    .setMaxPlayers(16)
-    .setCrossPlatform(true)
-    .build(),
-  
-  // Competitive PvP server
-  COMPETITIVE: (name: string) => new ServerConfigBuilder(name, OfficialScenarios.CAH_MILITARY_BASE)
-    .setMaxPlayers(32)
-    .setCrossPlatform(false) // PC only because I'm mean
-    .build(),
-  
-  // Large-scale warfare
-  MASSIVE: (name: string) => new ServerConfigBuilder(name, OfficialScenarios.CONFLICT_EVERON)
-    .setMaxPlayers(128)
-    .setCrossPlatform(true)
-    .build()
-};
-
-// Usage in your automation tool
-const newServer = ServerTemplates.COMPETITIVE('Clan Battle Server');
-```
-
-### Port Management for Multiple Servers
-
-```typescript
-import { createDefaultServerConfig, OfficialScenarios } from 'reforger-types';
-
-class ServerManager {
-  private usedPorts = new Set<number>();
-  
-  createServer(name: string, scenario: string) {
-    const basePort = this.findAvailablePort();
-    
-    const config = createDefaultServerConfig(
-      name,
-      scenario,
-      '0.0.0.0',
-      basePort
-    );
-    
-    // Extract the automatically allocated ports from the configuration
-    const gamePort = config.bindPort;        // Game port (basePort)
-    const a2sPort = config.a2s.port;         // Query port (basePort + 1)  
-    const rconPort = config.rcon.port;       // RCON port (basePort + 2)
-    
-    // Track the allocated ports
-    this.usedPorts.add(gamePort);
-    this.usedPorts.add(a2sPort);
-    this.usedPorts.add(rconPort);
-    
-    console.log(`Server "${name}" allocated ports:`, {
-      game: gamePort,
-      query: a2sPort,
-      rcon: rconPort
-    });
-    
-    return config;
-  }
-  
-  private findAvailablePort(): number {
-    for (let port = 2001; port < 65533; port += 100) {
-      if (!this.usedPorts.has(port) && 
-          !this.usedPorts.has(port + 1) && 
-          !this.usedPorts.has(port + 2)) {
-        return port;
-      }
-    }
-    throw new Error('No available ports');
-  }
-}
+// createDefaultServerConfig automatically handles port allocation:
+// Base port: 2001 (game), 2002 (A2S query), 2003 (RCON)
+const config = createDefaultServerConfig('Server', scenario, '0.0.0.0', 2001);
 ```
 
 ---
 
-## 💡 Tips for Tool Builders
+## 📚 API Reference
 
-### 1. **Error Handling**
-The builder pattern is designed to always succeed, but you may want to validate user input before building:
-
-```typescript
-function validateAndBuild(userInput) {
-  // Validate user input before building
-  if (!userInput.name || userInput.name.length < 3) {
-    throw new Error('Server name must be at least 3 characters');
-  }
-  
-  if (userInput.players < 2 || userInput.players > 128) {
-    throw new Error('Max players must be between 2 and 128');
-  }
-
-  // Build configuration (this never throws)
-  const config = new ServerConfigBuilder(userInput.name, userInput.scenario)
-    .setMaxPlayers(userInput.players)
-    .build();
-    
-  return config;
-}
-```
-
-### 2. **User-Friendly Scenario Names**
-Create a mapping for better UX:
-
-```typescript
-const ScenarioDisplayNames = {
-  [OfficialScenarios.CONFLICT_EVERON]: 'Conflict - Everon (Large Scale)',
-  [OfficialScenarios.CAH_MILITARY_BASE]: 'Capture & Hold - Military Base'
-};
-```
-
-### 3. **Configuration Presets**
-Offer common configurations:
-
-```typescript
-const QuickPresets = {
-  'Small PvP (16 players)': { maxPlayers: 16, scenario: 'CAH_CASTLE' },
-  'Medium Conflict (32 players)': { maxPlayers: 32, scenario: 'CONFLICT_ARLAND' },
-  'Large Warfare (64 players)': { maxPlayers: 64, scenario: 'CONFLICT_EVERON' },
-  'Massive Warfare (128 players)': { maxPlayers: 128, scenario: 'CONFLICT_EVERON' }
-};
-```
-
-### 4. **JSON Export Ready**
-Configurations are ready for direct JSON export:
-
-```typescript
-const config = new ServerConfigBuilder('My Server', OfficialScenarios.CONFLICT_EVERON).build();
-
-// Save to file
-fs.writeFileSync('serverconfig.json', JSON.stringify(config, null, 2));
-
-// Or send via API
-await fetch('/api/deploy', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify(config)
-});
-```
-
----
-
-## 📚 Complete API Reference
-
-### Builder Pattern Methods
-
-```typescript
-import { ServerConfigBuilder } from 'reforger-types';
-
-// Constructor accepts optional server name and scenario ID
-const builder = new ServerConfigBuilder('Server Name', 'scenario-id');
-// or
-const builder2 = new ServerConfigBuilder(); // Use defaults, configure later
-
-// Core server settings
-builder.setBindAddress('0.0.0.0');     // Server bind address
-builder.setBindPort(2001);              // Base port (A2S=2002, RCON=2003)
-builder.setPublicAddress('1.2.3.4');   // Public IP for server browser
-builder.setPublicPort(2001);            // Public port
-
-// Game configuration  
-builder.setServerName('My Server');     // Display name
-builder.setScenarioId('{ABC1234567}Missions/Example.conf');   // Mission scenario
-builder.setMaxPlayers(64);              // 1-64 players
-builder.setCrossPlatform(true);         // Enable console crossplay
-builder.setGamePassword('password');    // Server password
-builder.setAdminPassword('admin123');   // Admin password
-
-// RCON settings
-builder.setRconPassword('rcon123');     // RCON password
-builder.setRconAddress('127.0.0.1');   // RCON bind address
-
-// Operating settings
-builder.setPlayerSaveTime(120);        // Save interval (seconds)
-builder.setAiLimit(100);               // AI limit (-1 = unlimited)
-
-const config = builder.build();         // Generate final config
-```
-
-### Quick Functions
+### Core Functions
 
 ```typescript
 import { 
   createDefaultServerConfig,
-  createDefaultGameConfig,
-  OfficialScenarios 
+  ServerConfigBuilder,
+  OfficialScenarios,
+  parseServerConfig 
 } from 'reforger-types';
 
-// Fastest way - everything with defaults
-const config = createDefaultServerConfig(
-  'Server Name',                    // Required: server name
-  OfficialScenarios.CONFLICT_EVERON // Required: scenario path or string-ish that can become one
-);
+// Quick server creation
+const config = createDefaultServerConfig('Server Name', OfficialScenarios.CONFLICT_EVERON);
 
-// With custom options
-const customConfig = createDefaultServerConfig(
-  'Custom Server',                 // Server name
-  OfficialScenarios.CAH_CASTLE,    // Scenario
-  '192.168.1.100',                 // Bind address (default: '0.0.0.0')
-  3001,                            // Base port (default: 2001)
-  true,                            // Cross-platform (default: false)
-  'rcon-password'                  // RCON password (default: '')
-);
+// Detailed builder pattern
+const builder = new ServerConfigBuilder('Server Name', 'scenario-id')
+  .setMaxPlayers(64)
+  .setBindPort(2001)
+  .setCrossPlatform(true)
+  .build();
 
-// Just the game portion
-const gameConfig = createDefaultGameConfig(
-  'Game Name',
-  OfficialScenarios.COMBAT_OPS_EVERON,
-  true  // cross-platform
-);
+// Parse existing configurations
+const result = parseServerConfig(jsonString);
 ```
 
-### Official Scenarios Reference
-
-```typescript
-import { OfficialScenarios } from 'reforger-types';
-
-// Conflict Scenarios (Large-scale warfare)
-OfficialScenarios.CONFLICT_EVERON           // Main Everon conflict
-OfficialScenarios.CONFLICT_NORTHERN_EVERON  // North-central Everon  
-OfficialScenarios.CONFLICT_SOUTHERN_EVERON  // Southwest coast Everon
-OfficialScenarios.CONFLICT_WESTERN_EVERON   // Western Everon
-OfficialScenarios.CONFLICT_MONTIGNAC        // Montignac region
-OfficialScenarios.CONFLICT_ARLAND           // Arland island
-
-// Combat Ops (Medium-scale operations)
-OfficialScenarios.COMBAT_OPS_ARLAND         // Arland operations
-OfficialScenarios.COMBAT_OPS_EVERON         // Everon operations
-
-// Game Master (Sandbox/custom)
-OfficialScenarios.GAME_MASTER_EVERON        // GM mode Everon
-OfficialScenarios.GAME_MASTER_ARLAND        // GM mode Arland
-
-// Capture & Hold (Competitive)
-OfficialScenarios.CAH_MILITARY_BASE         // Military base
-OfficialScenarios.CAH_CASTLE               // Castle location
-OfficialScenarios.CAH_FACTORY               // Factory complex
-OfficialScenarios.CAH_CONCRETE_PLANT        // Concrete plant
-OfficialScenarios.CAH_FOREST               // Forest area
-OfficialScenarios.CAH_LE_MOULE              // Le Moule town
-OfficialScenarios.CAH_MORTON                // Morton area
-OfficialScenarios.CAH_BRIARS               // Briars coast
-
-// Training
-OfficialScenarios.TUTORIAL                  // Tutorial/training
-```
-
----
-
-## 🔍 Configuration Parsing & Validation
-
-### Parse Existing Server Configurations
-
-```typescript
-import { parseServerConfig, validateServerConfig } from 'reforger-types';
-
-// Parse from JSON file
-const configJson = await fs.readFile('./server-config.json', 'utf8');
-const result = parseServerConfig(configJson);
-
-if (result.success) {
-  console.log('✅ Configuration valid:', result.data.game.name);
-  console.log('Server will run on port:', result.data.bindPort);
-} else {
-  console.error('❌ Configuration errors:', result.errors);
-  console.warn('⚠️ Warnings:', result.warnings);
-}
-
-// Validate an existing config object
-const existingConfig = { /* your config */ };
-const validation = validateServerConfig(existingConfig);
-
-if (!validation.success) {
-  console.error('Invalid configuration:', validation.errors);
-}
-```
-
-### Parser Options
-
-```typescript
-import { ServerConfigParser } from 'reforger-types';
-
-// Create parser with custom options
-const parser = new ServerConfigParser({
-  strict: true,           // Fail on unknown properties
-  allowDefaults: true,    // Fill in missing properties with defaults
-  validateRanges: true    // Validate numeric ranges (ports, player counts)
-});
-
-const result = parser.parseServerConfig(jsonData);
-```
-
-### Individual Component Parsing
-
-```typescript
-// Parse just the game configuration section
-const gameResult = parser.parseGameConfig({
-  name: "My Server",
-  maxPlayers: 64,
-  scenarioId: "{ECC61978EDCC2B5A}Missions/23_Campaign.conf"
-});
-
-// Parse game properties
-const propsResult = parser.parseGameProperties({
-  serverMaxViewDistance: 1600,
-  battlEye: true,
-  fastValidation: true
-});
-```
+For detailed API documentation, see the TypeScript definitions and examples folder.
