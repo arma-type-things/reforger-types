@@ -2,7 +2,7 @@
   "name": "reforger-types",
   "version": "0.0.1-alpha.1",
   "type": "module",
-  "description": "TypeScript definitions for Arma Reforger server configuration and mission resource references",
+  "description": "TypeScript definitions for Arma Reforger server configuration and tooling",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
