@@ -56,6 +56,7 @@ export type IServerConfigBuilder = server.IServerConfigBuilder;
 export type ParseResult<T> = server.ParseResult<T>;
 export type ParserOptions = server.ParserOptions;
 export type ParserWarning = server.ParserWarning;
+export type ParserError = server.ParserError;
 
 // Export scenario utilities for convenience
 export const MissionResourceReference = scenario.MissionResourceReference;
