@@ -588,7 +588,7 @@ export class ServerConfigParser {
     if (!gameConfig.passwordAdmin || gameConfig.passwordAdmin.trim() === '') {
       warnings.push({
         type: ParserWarningType.EMPTY_ADMIN_PASSWORD,
-        message: 'Admin password is empty. This poses a security risk.',
+        message: 'Admin password is empty, you should probably reconsider this.',
         field: 'game.passwordAdmin',
         value: gameConfig.passwordAdmin
       });
