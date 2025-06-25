@@ -23,6 +23,17 @@ npm run build
 npm start configs/valid-server.json
 ```
 
+### [redsmith](./redsmith/)
+An interactive forge for crafting Arma Reforger server configuration files based on user inputs.
+
+**Quick Start:**
+```bash
+cd redsmith
+npm install
+npm run build
+npm start
+```
+
 ### [discord-bot](./discord-bot/)
 A TypeScript Discord bot that creates Arma Reforger server configurations via slash commands.
 
@@ -68,6 +79,7 @@ Each example directory contains:
 ### Example Use Cases
 
 - **Learning the API** - Start with the standalone examples (`parser-example.js`, `mod-extensions-example.js`)
+- **Creating Configurations** - Use redsmith for interactive configuration generation
 - **CLI Tools** - See the config-validator for a complete CLI application
 - **Discord Integration** - Use the discord-bot as a template for chat integrations
 - **Web Applications** - The discord-bot's service layer can be adapted for web APIs

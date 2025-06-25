@@ -42,7 +42,8 @@
   "author": "tsal <tsalaroth@gmail.com>",
   "license": "LGPL-3.0-only",
   "devDependencies": {
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "@types/node": "^24.0.4"
   },
   "engines": {
     "node": ">=22"

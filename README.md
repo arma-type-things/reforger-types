@@ -13,6 +13,7 @@ npm install reforger-types
 See the [examples folder](./examples) for complete implementations:
 - **[Discord Bot](./examples/discord-bot/)** - Slash commands for server configuration  
 - **[Config Validator](./examples/config-validator/)** - CLI validation tool
+- **[Redsmith](./examples/redsmith/)** - Interactive wizard for generating server configuration files
 - **[Parser Example](./examples/parser-example.js)** - Configuration parsing and validation
 - **[Mod Extensions Example](./examples/mod-extensions-example.js)** - Workshop URL and mod utilities
 
