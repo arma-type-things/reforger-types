@@ -26,9 +26,10 @@
     "prebuild": "npm run clean",
     "prepublishOnly": "npm run build",
     "dev": "tsc --watch",
-    "test": "npm run test:node && npm run test:bun",
+    "test": "npm run test:node && npm run test:bun && npm run test:integration",
     "test:bun": "bun test test/*.bun.test.ts",
-    "test:node": "node --test test/*.node.test.js"
+    "test:node": "node --test test/*.node.test.js",
+    "test:integration": "node test/integration/run-all.js"
   },
   "keywords": [
     "arma",
