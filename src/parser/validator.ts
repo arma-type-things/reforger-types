@@ -23,7 +23,7 @@ export class Validator {
   /**
    * Validate a server configuration and return errors and warnings
    */
-  validateServerConfig(config: ServerConfig): ValidationResult {
+  validate(config: ServerConfig): ValidationResult {
     const errors: ParserError[] = [];
     const warnings: ParserWarning[] = [];
 

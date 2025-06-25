@@ -32,7 +32,7 @@ A TypeScript Discord bot that creates Arma Reforger server configurations via sl
 - Server configuration builder integration
 - Environment-based configuration
 
-### Legacy Examples
+### Additional Examples
 
 - `mod-extensions-example.js` - Demonstrates mod extension utilities
 - `parser-example.js` - Basic parser usage example

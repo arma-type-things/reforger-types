@@ -53,7 +53,7 @@ export class Parser {
         errors.push(...rangeErrors);
 
         // Business logic validation (validation errors and warnings)
-        const validationResult = this.validator.validateServerConfig(config);
+        const validationResult = this.validator.validate(config);
         validationErrors = validationResult.errors;
         warnings = validationResult.warnings;
 

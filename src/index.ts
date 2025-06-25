@@ -7,7 +7,7 @@ import * as parser from './parser/index.js';
 // Export the namespaces
 export { server, scenario, parser };
 
-// Re-export for backward compatibility and convenience
+// Re-export for convenience
 export const SupportedPlatform = server.SupportedPlatform;
 
 // Export default initializer functions for convenience
@@ -22,14 +22,9 @@ export const createDefaultMissionHeader = server.createDefaultMissionHeader;
 // Export builder pattern classes
 export const ServerConfigBuilder = server.ServerConfigBuilder;
 
-// Export parser functions
-export const ServerConfigParser = parser.ServerConfigParser;
-export const parseServerConfig = parser.parseServerConfig;
-export const validateServerConfig = parser.validateServerConfig;
+// Export parser API
 export const ParserWarningType = parser.ParserWarningType;
 export const ParserErrorType = parser.ParserErrorType;
-
-// Export new parser architecture
 export const Parser = parser.Parser;
 export const parse = parser.parse;
 
@@ -59,7 +54,6 @@ export type OperatingConfig = server.OperatingConfig;
 export type ServerConfig = server.ServerConfig;
 export type IServerConfigBuilder = server.IServerConfigBuilder;
 export type ParseResult<T> = parser.ParseResult<T>;
-export type ParserOptions = parser.ParserOptions;
 export type ParserWarning = parser.ParserWarning;
 export type ParserError = parser.ParserError;
 

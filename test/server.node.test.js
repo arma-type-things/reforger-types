@@ -336,21 +336,19 @@ describe('Cross-Platform Logic Validation', () => {
 describe('Parser Integration', () => {
   test('should export parser functions from main index', async () => {
     const { 
-      ServerConfigParser,
-      parseServerConfig,
-      validateServerConfig 
+      Parser,
+      parse
     } = await import('../dist/index.js');
     
-    assert.strictEqual(typeof ServerConfigParser, 'function');
-    assert.strictEqual(typeof parseServerConfig, 'function');
-    assert.strictEqual(typeof validateServerConfig, 'function');
+    assert.strictEqual(typeof Parser, 'function');
+    assert.strictEqual(typeof parse, 'function');
   });
 
   test('should parse valid configuration', async () => {
-    const { parseServerConfig, createDefaultServerConfig, OfficialScenarios } = await import('../dist/index.js');
+    const { parse, createDefaultServerConfig, OfficialScenarios } = await import('../dist/index.js');
     
-    const config = createDefaultServerConfig('Parser Test', OfficialScenarios.TUTORIAL);
-    const result = parseServerConfig(config);
+    const config = createDefaultServerConfig('Parser Test', OfficialScenarios.TUTORIAL.toString());
+    const result = parse(config);
     
     assert.strictEqual(result.success, true);
     assert.strictEqual(result.data.game.name, 'Parser Test');
@@ -358,10 +356,10 @@ describe('Parser Integration', () => {
   });
 
   test('should validate configuration', async () => {
-    const { validateServerConfig, createDefaultServerConfig, OfficialScenarios } = await import('../dist/index.js');
+    const { parse, createDefaultServerConfig, OfficialScenarios } = await import('../dist/index.js');
     
-    const config = createDefaultServerConfig('Validation Test', OfficialScenarios.CAH_CASTLE);
-    const result = validateServerConfig(config);
+    const config = createDefaultServerConfig('Validation Test', OfficialScenarios.CAH_CASTLE.toString());
+    const result = parse(config, { validate: true });
     
     assert.strictEqual(result.success, true);
     assert.strictEqual(result.errors.length, 0);

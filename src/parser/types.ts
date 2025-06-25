@@ -96,12 +96,3 @@ export interface ValidationResult {
   errors: ParserError[];
   warnings: ParserWarning[];
 }
-
-/**
- * Legacy parser options interface for backwards compatibility
- */
-export interface ParserOptions {
-  strict?: boolean;           // Strict validation (fail on unknown properties)
-  allowDefaults?: boolean;    // Fill in missing properties with defaults
-  validateRanges?: boolean;   // Validate numeric ranges (ports, player counts, etc.)
-}

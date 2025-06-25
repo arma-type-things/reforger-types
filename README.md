@@ -48,15 +48,23 @@ const config = new ServerConfigBuilder('My Server', OfficialScenarios.CONFLICT_E
 ### Parse & Validate
 
 ```typescript
-import { parseServerConfig } from 'reforger-types';
+import { Parser, parse } from 'reforger-types';
 
-const result = parseServerConfig(jsonString);
+// Using the convenience function
+const result = parse(configObject);
 if (result.success) {
   console.log('✅ Valid configuration');
   console.log('Server:', result.data.game.name);
 } else {
   console.error('❌ Errors:', result.errors);
 }
+
+// Using Parser class with validation
+const parser = new Parser();
+const validatedResult = parser.parse(configObject, {
+  validate: true,
+  ignore_warnings: ['EMPTY_ADMIN_PASSWORD']
+});
 ```
 
 ## Core API
@@ -70,8 +78,8 @@ import {
   ServerConfigBuilder,
   
   // Parsing & validation
-  parseServerConfig,
-  validateServerConfig,
+  Parser,
+  parse,
   
   // Constants & enums
   OfficialScenarios,

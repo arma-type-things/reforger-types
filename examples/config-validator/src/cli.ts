@@ -4,7 +4,7 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
-import { parseServerConfig, ParserWarningType, ParserErrorType } from 'reforger-types';
+import { parse, ParserWarningType, ParserErrorType } from 'reforger-types';
 import type { ParserError, ParserWarning, ParseResult, ServerConfig } from 'reforger-types';
 
 const program = new Command();
@@ -60,7 +60,7 @@ function validateConfigFile(configPath: string): void {
     }
 
     // Parse with our validator
-    const result = parseServerConfig(configData);
+    const result = parse(configData, { validate: true });
 
     // Check for basic parsing errors (not validation errors)
     if (!result.success && result.errors && result.errors.length > 0) {
