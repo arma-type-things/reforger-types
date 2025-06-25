@@ -26,12 +26,25 @@ export const ServerConfigParser = server.ServerConfigParser;
 export const parseServerConfig = server.parseServerConfig;
 export const validateServerConfig = server.validateServerConfig;
 
+// Export mod extension functions
+export const createExtendedMod = server.createExtendedMod;
+export const getModWorkshopUrl = server.getModWorkshopUrl;
+export const modIdFromUrl = server.modIdFromUrl;
+export const isValidModId = server.isValidModId;
+export const createModExtendedFromUrl = server.createModExtendedFromUrl;
+export const createModExtendedListFromUrls = server.createModExtendedListFromUrls;
+export const createModListFromUrls = server.createModListFromUrls;
+export const toBaseMod = server.toBaseMod;
+export const toBaseModList = server.toBaseModList;
+export const WORKSHOP_BASE_URL = server.WORKSHOP_BASE_URL;
+
 // Type-only exports for TypeScript users
 export type A2SConfig = server.A2SConfig;
 export type RconConfig = server.RconConfig;
 export type MissionHeader = server.MissionHeader;
 export type MissionHeaderValue = server.MissionHeaderValue;
 export type Mod = server.Mod;
+export type ModExtended = server.ModExtended;
 export type GameProperties = server.GameProperties;
 export type GameConfig = server.GameConfig;
 export type OperatingConfig = server.OperatingConfig;

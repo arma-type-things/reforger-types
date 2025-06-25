@@ -3,3 +3,4 @@ export * from './types.js';
 export * from './defaults.js';
 export * from './builder.js';
 export * from './parser.js';
+export * from './extensions.js';

@@ -22,7 +22,7 @@ export interface MissionHeader {
 export interface Mod {
   modId: string;
   name: string;
-  version: string;
+  version?: string;
   required?: boolean;
 }
 

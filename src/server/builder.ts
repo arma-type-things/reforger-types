@@ -1,5 +1,5 @@
 // Builder pattern interfaces for server configuration generation
-import { ServerConfig, GameConfig, GameProperties, OperatingConfig, A2SConfig, RconConfig, SupportedPlatform } from './types.js';
+import { ServerConfig, GameConfig, GameProperties, OperatingConfig, A2SConfig, RconConfig, SupportedPlatform, Mod } from './types.js';
 import {
   createDefaultMissionHeader,
   createDefaultA2SConfig,
@@ -8,6 +8,7 @@ import {
   createDefaultGameConfig,
   createDefaultOperatingConfig
 } from './defaults.js';
+import { createModListFromUrls, isValidModId } from './extensions.js';
 
 export interface IServerConfigBuilder {
   // Core server settings
@@ -23,6 +24,13 @@ export interface IServerConfigBuilder {
   setCrossPlatform(enabled: boolean): this;
   setGamePassword(password: string): this;
   setAdminPassword(password: string): this;
+  
+  // Mod configuration
+  setMods(mods: Mod[]): this;
+  addMod(mod: Mod): this;
+  addMods(mods: Mod[]): this;
+  addModsFromUrls(urls: string[]): this;
+  clearMods(): this;
   
   // RCON configuration
   setRconPassword(password: string): this;
@@ -55,6 +63,7 @@ export class ServerConfigBuilder implements IServerConfigBuilder {
   private _crossPlatform: boolean = false;
   private _gamePassword: string = "";
   private _adminPassword: string = "";
+  private _mods: Mod[] = [];
   private _rconPassword: string = "";
   private _rconAddress?: string;
   private _playerSaveTime: number = 120;
@@ -117,6 +126,53 @@ export class ServerConfigBuilder implements IServerConfigBuilder {
     return this;
   }
 
+  // Mod configuration
+  setMods(mods: Mod[]): this {
+    // Validate mod IDs before setting
+    const validMods = mods.filter(mod => {
+      if (!isValidModId(mod.modId)) {
+        console.warn(`Invalid mod ID: ${mod.modId}. Skipping mod: ${mod.name}`);
+        return false;
+      }
+      return true;
+    });
+    this._mods = validMods;
+    return this;
+  }
+
+  addMod(mod: Mod): this {
+    if (!isValidModId(mod.modId)) {
+      console.warn(`Invalid mod ID: ${mod.modId}. Skipping mod: ${mod.name}`);
+      return this;
+    }
+    // Check if mod already exists (by modId)
+    const existingIndex = this._mods.findIndex(m => m.modId === mod.modId);
+    if (existingIndex >= 0) {
+      // Replace existing mod
+      this._mods[existingIndex] = mod;
+    } else {
+      // Add new mod
+      this._mods.push(mod);
+    }
+    return this;
+  }
+
+  addMods(mods: Mod[]): this {
+    mods.forEach(mod => this.addMod(mod));
+    return this;
+  }
+
+  addModsFromUrls(urls: string[]): this {
+    const modsFromUrls = createModListFromUrls(urls);
+    this.addMods(modsFromUrls);
+    return this;
+  }
+
+  clearMods(): this {
+    this._mods = [];
+    return this;
+  }
+
   // RCON configuration
   setRconPassword(password: string): this {
     this._rconPassword = password;
@@ -160,6 +216,7 @@ export class ServerConfigBuilder implements IServerConfigBuilder {
     config.password = this._gamePassword;
     config.passwordAdmin = this._adminPassword;
     config.maxPlayers = this._maxPlayers;
+    config.mods = [...this._mods]; // Copy the mods array
     return config;
   }
 
@@ -197,6 +254,7 @@ export class ServerConfigBuilder implements IServerConfigBuilder {
     this._crossPlatform = false;
     this._gamePassword = "";
     this._adminPassword = "";
+    this._mods = [];
     this._rconPassword = "";
     this._rconAddress = undefined;
     this._playerSaveTime = 120;
