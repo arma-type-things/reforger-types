@@ -10,6 +10,27 @@ import { Mod as BaseMod } from './types';
 export const WORKSHOP_BASE_URL = 'https://reforger.armaplatform.com/workshop';
 
 /**
+ * Generates a default name for a mod when none is provided
+ * Uses last 8 hex characters to create a shorter, JS-safe identifier
+ * @param modId - The mod ID to generate a name for
+ * @returns A default name in the format "Mod {last8chars}"
+ */
+function generateDefaultModName(modId: string): string {
+  // Use last 8 characters for shorter, safer identifier
+  const shortId = modId.slice(-8);
+  return `Mod ${shortId}`;
+}
+
+/**
+ * Gets the effective name for a mod, providing a default if none exists
+ * @param mod - BaseMod object
+ * @returns The mod's name or a generated default name
+ */
+export function getEffectiveModName(mod: BaseMod): string {
+  return (mod.name && mod.name.trim() !== '') ? mod.name : generateDefaultModName(mod.modId);
+}
+
+/**
  * Extended Mod interface with additional computed properties
  */
 export interface ModExtended extends BaseMod {
@@ -48,8 +69,9 @@ export function getModWorkshopUrl(mod: BaseMod): string;
 export function getModWorkshopUrl(mod: ModExtended): string;
 
 export function getModWorkshopUrl(mod: BaseMod | ModExtended): string {
-  const safeName = mod.name ? sanitizeUrlName(mod.name) : 'mod';
-  return `${WORKSHOP_BASE_URL}/${mod.modId}-${safeName}`;
+  const effectiveName = getEffectiveModName(mod);
+  const sanitizedName = sanitizeUrlName(effectiveName);
+  return `${WORKSHOP_BASE_URL}/${mod.modId}-${sanitizedName}`;
 }
 
 /**
@@ -93,13 +115,17 @@ export function createModExtendedFromUrl(url: string): ModExtended | null {
 
   // Extract name from URL (part after the dash)
   const urlParts = url.split('-');
-  const urlName = urlParts.length > 1 ? urlParts.slice(1).join('-') : 'Unknown Mod';
+  const urlName = urlParts.length > 1 ? urlParts.slice(1).join('-') : undefined;
   
   // Create minimal mod object - user can add version/required as needed
   const baseMod: BaseMod = {
-    modId,
-    name: urlName
+    modId
   };
+  
+  // Only include name if we could extract it from URL
+  if (urlName && urlName.trim() !== '') {
+    baseMod.name = urlName;
+  }
   
   return createExtendedMod(baseMod);
 }
@@ -144,9 +170,12 @@ export function createModListFromUrls(urls: string[]): BaseMod[] {
  */
 export function toBaseMod(modExtended: ModExtended): BaseMod {
   const { modId, name, version, required } = modExtended;
-  const baseMod: BaseMod = { modId, name };
+  const baseMod: BaseMod = { modId };
   
   // Only include optional properties if they exist
+  if (name !== undefined) {
+    baseMod.name = name;
+  }
   if (version !== undefined) {
     baseMod.version = version;
   }

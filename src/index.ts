@@ -31,6 +31,7 @@ export const createExtendedMod = server.createExtendedMod;
 export const getModWorkshopUrl = server.getModWorkshopUrl;
 export const modIdFromUrl = server.modIdFromUrl;
 export const isValidModId = server.isValidModId;
+export const getEffectiveModName = server.getEffectiveModName;
 export const createModExtendedFromUrl = server.createModExtendedFromUrl;
 export const createModExtendedListFromUrls = server.createModExtendedListFromUrls;
 export const createModListFromUrls = server.createModListFromUrls;

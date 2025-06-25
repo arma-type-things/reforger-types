@@ -7,6 +7,7 @@ import {
   modIdFromUrl,
   isValidModId,
   createModListFromUrls,
+  getEffectiveModName,
   WORKSHOP_BASE_URL
 } from '../dist/index.js';
 
@@ -42,13 +43,12 @@ describe('Mod Extensions ES Module Tests', () => {
 
     test('should handle mods with no name gracefully', () => {
       const modWithoutName = {
-        modId: 'ABCD1234EFGH5678',
-        name: '',
+        modId: 'ABCD1234EF567890',
         version: '1.0.0'
       };
 
       const extendedMod = createExtendedMod(modWithoutName);
-      assert.equal(extendedMod.url, 'https://reforger.armaplatform.com/workshop/ABCD1234EFGH5678-mod');
+      assert.equal(extendedMod.url, 'https://reforger.armaplatform.com/workshop/ABCD1234EF567890-ModEF567890');
     });
   });
 
@@ -60,9 +60,15 @@ describe('Mod Extensions ES Module Tests', () => {
     });
 
     test('should generate URL with mod object without name', () => {
+      const mod = { modId: '656AC925A777AE40' };
+      const url = getModWorkshopUrl(mod);
+      assert.equal(url, 'https://reforger.armaplatform.com/workshop/656AC925A777AE40-ModA777AE40');
+    });
+
+    test('should generate default name for mod with empty string name', () => {
       const mod = { modId: '656AC925A777AE40', name: '' };
       const url = getModWorkshopUrl(mod);
-      assert.equal(url, 'https://reforger.armaplatform.com/workshop/656AC925A777AE40-mod');
+      assert.equal(url, 'https://reforger.armaplatform.com/workshop/656AC925A777AE40-ModA777AE40');
     });
 
     test('should sanitize special characters from name', () => {
@@ -163,6 +169,28 @@ describe('Mod Extensions ES Module Tests', () => {
       assert.equal(mods.length, 2);
       assert.equal(mods[0].modId, '656AC925A777AE40');
       assert.equal(mods[1].modId, '789DEF123ABC456B');
+    });
+  });
+
+  describe('getEffectiveModName', () => {
+    test('should return provided name when available', () => {
+      const mod = { modId: '656AC925A777AE40', name: 'My Custom Mod' };
+      assert.equal(getEffectiveModName(mod), 'My Custom Mod');
+    });
+
+    test('should generate default name when name is undefined', () => {
+      const mod = { modId: '656AC925A777AE40' };
+      assert.equal(getEffectiveModName(mod), 'Mod A777AE40');
+    });
+
+    test('should generate default name when name is empty string', () => {
+      const mod = { modId: '656AC925A777AE40', name: '' };
+      assert.equal(getEffectiveModName(mod), 'Mod A777AE40');
+    });
+
+    test('should generate default name when name is only whitespace', () => {
+      const mod = { modId: '656AC925A777AE40', name: '   ' };
+      assert.equal(getEffectiveModName(mod), 'Mod A777AE40');
     });
   });
 });

@@ -9,7 +9,8 @@ import {
   createModListFromUrls,
   WORKSHOP_BASE_URL,
   type Mod,
-  type ModExtended
+  type ModExtended,
+  getEffectiveModName
 } from '../src/index.js';
 
 describe('Mod Extensions', () => {
@@ -44,13 +45,12 @@ describe('Mod Extensions', () => {
 
     test('should handle mods with no name gracefully', () => {
       const modWithoutName: Mod = {
-        modId: 'ABCD1234EFGH5678',
-        name: '',
+        modId: 'ABCD1234EF567890',
         version: '1.0.0'
       };
 
       const extendedMod = createExtendedMod(modWithoutName);
-      expect(extendedMod.url).toBe('https://reforger.armaplatform.com/workshop/ABCD1234EFGH5678-mod');
+      expect(extendedMod.url).toBe('https://reforger.armaplatform.com/workshop/ABCD1234EF567890-ModEF567890');
     });
   });
 
@@ -62,9 +62,15 @@ describe('Mod Extensions', () => {
     });
 
     test('should generate URL with mod object without name', () => {
+      const mod: Mod = { modId: '656AC925A777AE40' };
+      const url = getModWorkshopUrl(mod);
+      expect(url).toBe('https://reforger.armaplatform.com/workshop/656AC925A777AE40-ModA777AE40');
+    });
+
+    test('should generate default name for mod with empty string name', () => {
       const mod: Mod = { modId: '656AC925A777AE40', name: '' };
       const url = getModWorkshopUrl(mod);
-      expect(url).toBe('https://reforger.armaplatform.com/workshop/656AC925A777AE40-mod');
+      expect(url).toBe('https://reforger.armaplatform.com/workshop/656AC925A777AE40-ModA777AE40');
     });
 
     test('should sanitize special characters from name', () => {
@@ -165,6 +171,28 @@ describe('Mod Extensions', () => {
       expect(mods).toHaveLength(2);
       expect(mods[0].modId).toBe('656AC925A777AE40');
       expect(mods[1].modId).toBe('789DEF123ABC456B');
+    });
+  });
+
+  describe('getEffectiveModName', () => {
+    test('should return provided name when available', () => {
+      const mod: Mod = { modId: '656AC925A777AE40', name: 'My Custom Mod' };
+      expect(getEffectiveModName(mod)).toBe('My Custom Mod');
+    });
+
+    test('should generate default name when name is undefined', () => {
+      const mod: Mod = { modId: '656AC925A777AE40' };
+      expect(getEffectiveModName(mod)).toBe('Mod A777AE40');
+    });
+
+    test('should generate default name when name is empty string', () => {
+      const mod: Mod = { modId: '656AC925A777AE40', name: '' };
+      expect(getEffectiveModName(mod)).toBe('Mod A777AE40');
+    });
+
+    test('should generate default name when name is only whitespace', () => {
+      const mod: Mod = { modId: '656AC925A777AE40', name: '   ' };
+      expect(getEffectiveModName(mod)).toBe('Mod A777AE40');
     });
   });
 });

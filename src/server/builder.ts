@@ -8,7 +8,7 @@ import {
   createDefaultGameConfig,
   createDefaultOperatingConfig
 } from './defaults.js';
-import { createModListFromUrls, isValidModId } from './extensions.js';
+import { createModListFromUrls, isValidModId, getEffectiveModName } from './extensions.js';
 
 export interface IServerConfigBuilder {
   // Core server settings
@@ -131,7 +131,7 @@ export class ServerConfigBuilder implements IServerConfigBuilder {
     // Validate mod IDs before setting
     const validMods = mods.filter(mod => {
       if (!isValidModId(mod.modId)) {
-        console.warn(`Invalid mod ID: ${mod.modId}. Skipping mod: ${mod.name}`);
+        console.warn(`Invalid mod ID: ${mod.modId}. Skipping mod: ${getEffectiveModName(mod)}`);
         return false;
       }
       return true;
@@ -142,7 +142,7 @@ export class ServerConfigBuilder implements IServerConfigBuilder {
 
   addMod(mod: Mod): this {
     if (!isValidModId(mod.modId)) {
-      console.warn(`Invalid mod ID: ${mod.modId}. Skipping mod: ${mod.name}`);
+      console.warn(`Invalid mod ID: ${mod.modId}. Skipping mod: ${getEffectiveModName(mod)}`);
       return this;
     }
     // Check if mod already exists (by modId)
