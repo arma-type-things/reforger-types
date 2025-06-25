@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import { loadConfig } from './utils/validation';
 import { ServerConfigService } from './services/ServerConfigService';
 import { CreateServerCommand } from './commands/CreateServerCommand';
+import { Command } from './types';
 
 // Load environment variables
 dotenv.config();
@@ -22,7 +23,7 @@ const configService = new ServerConfigService(config.configOutputDir);
 const createServerCommand = new CreateServerCommand(configService);
 
 // Store commands in a collection
-const commands = new Collection();
+const commands = new Collection<string, Command>();
 commands.set(createServerCommand.data.name, createServerCommand);
 
 // Register slash commands
