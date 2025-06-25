@@ -125,7 +125,7 @@ describe('Convenience Functions', () => {
 
 describe('New Parser Architecture', () => {
   test('should export Parser class', async () => {
-    const { Parser } = await import('../dist/server/parser.js');
+    const { Parser } = await import('../dist/parser/index.js');
     expect(typeof Parser).toBe('function');
     
     const parser = new Parser();
@@ -133,17 +133,17 @@ describe('New Parser Architecture', () => {
   });
 
   test('should export default parser instance', async () => {
-    const { parser } = await import('../dist/server/parser.js');
+    const { parser } = await import('../dist/parser/index.js');
     expect(typeof parser.parse).toBe('function');
   });
 
   test('should export top-level parse function', async () => {
-    const { parse } = await import('../dist/server/parser.js');
+    const { parse } = await import('../dist/parser/index.js');
     expect(typeof parse).toBe('function');
   });
 
   test('Parser.parse should handle validation options', async () => {
-    const { Parser } = await import('../dist/server/parser.js');
+    const { Parser } = await import('../dist/parser/index.js');
     const parser = new Parser();
     
     const validConfig = {

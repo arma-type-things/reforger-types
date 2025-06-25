@@ -2,9 +2,10 @@
 
 import * as server from './server/index.js';
 import * as scenario from './scenario/index.js';
+import * as parser from './parser/index.js';
 
 // Export the namespaces
-export { server, scenario };
+export { server, scenario, parser };
 
 // Re-export for backward compatibility and convenience
 export const SupportedPlatform = server.SupportedPlatform;
@@ -22,16 +23,15 @@ export const createDefaultMissionHeader = server.createDefaultMissionHeader;
 export const ServerConfigBuilder = server.ServerConfigBuilder;
 
 // Export parser functions
-export const ServerConfigParser = server.ServerConfigParser;
-export const parseServerConfig = server.parseServerConfig;
-export const validateServerConfig = server.validateServerConfig;
-export const ParserWarningType = server.ParserWarningType;
-export const ParserErrorType = server.ParserErrorType;
+export const ServerConfigParser = parser.ServerConfigParser;
+export const parseServerConfig = parser.parseServerConfig;
+export const validateServerConfig = parser.validateServerConfig;
+export const ParserWarningType = parser.ParserWarningType;
+export const ParserErrorType = parser.ParserErrorType;
 
 // Export new parser architecture
-export const Parser = server.Parser;
-export const parse = server.parse;
-export const parser = server.parser;
+export const Parser = parser.Parser;
+export const parse = parser.parse;
 
 // Export mod extension functions
 export const createExtendedMod = server.createExtendedMod;
@@ -58,10 +58,10 @@ export type GameConfig = server.GameConfig;
 export type OperatingConfig = server.OperatingConfig;
 export type ServerConfig = server.ServerConfig;
 export type IServerConfigBuilder = server.IServerConfigBuilder;
-export type ParseResult<T> = server.ParseResult<T>;
-export type ParserOptions = server.ParserOptions;
-export type ParserWarning = server.ParserWarning;
-export type ParserError = server.ParserError;
+export type ParseResult<T> = parser.ParseResult<T>;
+export type ParserOptions = parser.ParserOptions;
+export type ParserWarning = parser.ParserWarning;
+export type ParserError = parser.ParserError;
 
 // Export scenario utilities for convenience
 export const MissionResourceReference = scenario.MissionResourceReference;
