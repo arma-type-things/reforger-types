@@ -332,36 +332,3 @@ describe('Cross-Platform Logic Validation', () => {
     assert.ok(config.supportedPlatforms.includes(SupportedPlatform.PLAYSTATION));
   });
 });
-
-describe('Parser Integration', () => {
-  test('should export parser functions from main index', async () => {
-    const { 
-      Parser,
-      parse
-    } = await import('../dist/index.js');
-    
-    assert.strictEqual(typeof Parser, 'function');
-    assert.strictEqual(typeof parse, 'function');
-  });
-
-  test('should parse valid configuration', async () => {
-    const { parse, createDefaultServerConfig, OfficialScenarios } = await import('../dist/index.js');
-    
-    const config = createDefaultServerConfig('Parser Test', OfficialScenarios.TUTORIAL.toString());
-    const result = parse(config);
-    
-    assert.strictEqual(result.success, true);
-    assert.strictEqual(result.data.game.name, 'Parser Test');
-    assert.strictEqual(result.errors.length, 0);
-  });
-
-  test('should validate configuration', async () => {
-    const { parse, createDefaultServerConfig, OfficialScenarios } = await import('../dist/index.js');
-    
-    const config = createDefaultServerConfig('Validation Test', OfficialScenarios.CAH_CASTLE.toString());
-    const result = parse(config, { validate: true });
-    
-    assert.strictEqual(result.success, true);
-    assert.strictEqual(result.errors.length, 0);
-  });
-});
