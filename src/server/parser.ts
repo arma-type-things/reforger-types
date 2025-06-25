@@ -1,4 +1,3 @@
-// Configuration parser for Arma Reforger server configurations
 import {
   ServerConfig,
   GameConfig,
@@ -100,148 +99,63 @@ export interface ParseResult<T> {
   validationErrors: ParserError[];
 }
 
-export interface ParserOptions {
-  strict?: boolean;           // Strict validation (fail on unknown properties)
-  allowDefaults?: boolean;    // Fill in missing properties with defaults
-  validateRanges?: boolean;   // Validate numeric ranges (ports, player counts, etc.)
+/**
+ * Validation constants for Arma Reforger server configuration
+ * Based on official documentation from the server config wiki
+ */
+const VALIDATION_CONSTANTS = {
+  VIEW_DISTANCE: {
+    MINIMUM: 500,
+    RECOMMENDED_MAX: 2500,  // Performance impact starts to become significant above this
+    ABSOLUTE_MAX: 10000,
+    NETWORK_RECOMMENDED_RATIO: 0.9  // Network view distance should be ~90% of server view distance
+  },
+  PLAYER_COUNT: {
+    MINIMUM: 1,
+    RECOMMENDED_MAX: 96,    // Performance impact increases significantly above this
+    ABSOLUTE_MAX: 128
+  },
+  GRASS_DISTANCE: {
+    HIGH_PERFORMANCE_IMPACT: 100  // Values above this may significantly impact performance
+  },
+  AI_LIMIT: {
+    HIGH_PERFORMANCE_IMPACT: 80  // Values above this may significantly impact performance
+  },
+  PORTS: {
+    MINIMUM: 1024,
+    MAXIMUM: 65535
+  },
+  PASSWORD: {
+    MINIMUM_LENGTH: 3  // According to wiki: "must be at least 3 characters long"
+  }
+} as const;
+
+/**
+ * Validation result from the Validator
+ */
+interface ValidationResult {
+  errors: ParserError[];
+  warnings: ParserWarning[];
 }
 
-export class ServerConfigParser {
-  private options: Required<ParserOptions>;
-
-  constructor(options: ParserOptions = {}) {
-    this.options = {
-      strict: options.strict ?? false,
-      allowDefaults: options.allowDefaults ?? true,
-      validateRanges: options.validateRanges ?? true
-    };
-  }
-
+/**
+ * Server configuration validator - handles business logic validation
+ */
+class Validator {
   /**
-   * Parse a complete server configuration from JSON
+   * Validate a server configuration and return errors and warnings
    */
-  parseServerConfig(json: string | object): ParseResult<ServerConfig> {
-    const errors: string[] = [];
+  validateServerConfig(config: ServerConfig): ValidationResult {
+    const errors: ParserError[] = [];
     const warnings: ParserWarning[] = [];
-    const validationErrors: ParserError[] = [];
-
-    try {
-      const data = typeof json === 'string' ? JSON.parse(json) : json;
-      
-      // Basic structure validation
-      if (!this.isValidServerConfigStructure(data)) {
-        errors.push('Invalid server configuration structure');
-        return { success: false, errors, warnings, validationErrors };
-      }
-
-      const config = data as ServerConfig;
-
-      // Perform comprehensive validation and warning checks
-      const rangeErrors = this.validateRanges(config);
-      errors.push(...rangeErrors);
-
-      // Perform hard validation checks that should cause parsing to fail
-      this.validateHardRequirements(config, validationErrors);
-
-      // Generate warnings for configuration issues
-      this.generateConfigurationWarnings(config, warnings);
-
-      return {
-        success: errors.length === 0 && validationErrors.length === 0,
-        data: errors.length === 0 && validationErrors.length === 0 ? config : undefined,
-        errors,
-        warnings,
-        validationErrors
-      };
-    } catch (error) {
-      errors.push(`JSON parsing failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      return { success: false, errors, warnings, validationErrors };
-    }
-  }
-
-  /**
-   * Parse just the game configuration section
-   */
-  parseGameConfig(json: string | object): ParseResult<GameConfig> {
-    const errors: string[] = [];
-    const warnings: ParserWarning[] = [];
-    const validationErrors: ParserError[] = [];
-
-    try {
-      const data = typeof json === 'string' ? JSON.parse(json) : json;
-      
-      // TODO: Implement GameConfig validation
-      return {
-        success: true,
-        data: data as GameConfig,
-        errors,
-        warnings,
-        validationErrors
-      };
-    } catch (error) {
-      errors.push(`JSON parsing failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      return { success: false, errors, warnings, validationErrors };
-    }
-  }
-
-  /**
-   * Parse game properties section
-   */
-  parseGameProperties(json: string | object): ParseResult<GameProperties> {
-    const errors: string[] = [];
-    const warnings: ParserWarning[] = [];
-    const validationErrors: ParserError[] = [];
-
-    try {
-      const data = typeof json === 'string' ? JSON.parse(json) : json;
-      
-      // TODO: Implement GameProperties validation
-      return {
-        success: true,
-        data: data as GameProperties,
-        errors,
-        warnings,
-        validationErrors
-      };
-    } catch (error) {
-      errors.push(`JSON parsing failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      return { success: false, errors, warnings, validationErrors };
-    }
-  }
-
-  /**
-   * Validate a server configuration without parsing
-   */
-  validateServerConfig(config: unknown): ParseResult<ServerConfig> {
-    const errors: string[] = [];
-    const warnings: ParserWarning[] = [];
-    const validationErrors: ParserError[] = [];
-
-    // Basic structure validation
-    if (!this.isValidServerConfigStructure(config)) {
-      errors.push('Invalid server configuration structure');
-      return { success: false, errors, warnings, validationErrors };
-    }
-
-    const serverConfig = config as ServerConfig;
-
-    // Perform comprehensive validation and warning checks
-    const rangeErrors = this.validateRanges(serverConfig);
-    errors.push(...rangeErrors);
 
     // Perform hard validation checks
-    this.validateHardRequirements(serverConfig, validationErrors);
+    this.validateHardRequirements(config, errors);
 
     // Generate warnings for configuration issues
-    this.generateConfigurationWarnings(serverConfig, warnings);
+    this.generateConfigurationWarnings(config, warnings);
 
-    return {
-      success: errors.length === 0 && validationErrors.length === 0,
-      data: errors.length === 0 && validationErrors.length === 0 ? serverConfig : undefined,
-      errors,
-      warnings,
-      validationErrors
-    };
+    return { errors, warnings };
   }
 
   /**
@@ -437,55 +351,6 @@ export class ServerConfigParser {
         });
       }
     }
-  }
-
-  /**
-   * Basic structure validation (placeholder for future implementation)
-   */
-  private isValidServerConfigStructure(data: unknown): data is ServerConfig {
-    if (!data || typeof data !== 'object') {
-      return false;
-    }
-
-    const config = data as Record<string, unknown>;
-    
-    // Check for required top-level properties
-    const requiredProps = ['bindAddress', 'bindPort', 'a2s', 'rcon', 'game', 'operating'];
-    for (const prop of requiredProps) {
-      if (!(prop in config)) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  /**
-   * Validate numeric ranges according to game limits
-   */
-  private validateRanges(config: ServerConfig): string[] {
-    const errors: string[] = [];
-
-    // Port validation (these are still structural errors)
-    if (config.bindPort < 1024 || config.bindPort > 65535) {
-      errors.push(`bindPort must be between 1024 and 65535, got: ${config.bindPort}`);
-    }
-
-    // Player count validation (these are still structural errors)
-    if (config.game.maxPlayers < 1 || config.game.maxPlayers > 128) {
-      errors.push(`maxPlayers must be between 1 and 128, got: ${config.game.maxPlayers}`);
-    }
-
-    return errors;
-  }
-
-  /**
-   * Apply default values to missing properties
-   */
-  private applyDefaults(config: Partial<ServerConfig>): ServerConfig {
-    // TODO: Implement default application logic
-    // This would merge the provided config with createDefaultServerConfig()
-    return config as ServerConfig;
   }
 
   /**
@@ -699,7 +564,186 @@ export class ServerConfigParser {
 }
 
 /**
- * Convenience function for quick parsing
+ * Parser for Arma Reforger server configurations
+ * Handles JSON parsing and basic structure validation, delegates business logic to Validator
+ */
+export class Parser {
+  private validator = new Validator();
+
+  /**
+   * Parse and validate an Arma Reforger server configuration
+   * 
+   * @param input - JSON string or configuration object to parse
+   * @param options - Parse configuration options
+   * @returns ParseResult with success status, parsed data, errors, and warnings
+   */
+  parse(
+    input: string | object | unknown,
+    options: {
+      validate?: boolean;
+      ignore_warnings?: string[];
+      ignore_errors?: string[];
+    } = {}
+  ): ParseResult<ServerConfig> {
+    const {
+      validate = true,
+      ignore_warnings = [],
+      ignore_errors = []
+    } = options;
+
+    const errors: string[] = [];
+    let warnings: ParserWarning[] = [];
+    let validationErrors: ParserError[] = [];
+
+    try {
+      // Parse JSON if input is a string
+      const data = typeof input === 'string' ? JSON.parse(input) : input;
+      
+      // Basic "quack check" - does it look like a ServerConfig?
+      if (!this.isValidServerConfigStructure(data)) {
+        errors.push('Invalid server configuration structure');
+        return { success: false, errors, warnings, validationErrors };
+      }
+
+      const config = data as ServerConfig;
+
+      // Perform validation if requested
+      if (validate) {
+        // Range validation (structural errors)
+        const rangeErrors = this.validateRanges(config);
+        errors.push(...rangeErrors);
+
+        // Business logic validation (validation errors and warnings)
+        const validationResult = this.validator.validateServerConfig(config);
+        validationErrors = validationResult.errors;
+        warnings = validationResult.warnings;
+
+        // Filter out ignored warnings and errors
+        warnings = warnings.filter(w => !ignore_warnings.includes(w.type));
+        validationErrors = validationErrors.filter(e => !ignore_errors.includes(e.type));
+      }
+
+      return {
+        success: errors.length === 0 && validationErrors.length === 0,
+        data: errors.length === 0 && validationErrors.length === 0 ? config : undefined,
+        errors,
+        warnings,
+        validationErrors
+      };
+
+    } catch (error) {
+      errors.push(`JSON parsing failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      return { success: false, errors, warnings, validationErrors };
+    }
+  }
+
+  /**
+   * Basic structure validation - "quack check" for ServerConfig
+   */
+  private isValidServerConfigStructure(data: unknown): data is ServerConfig {
+    if (!data || typeof data !== 'object') {
+      return false;
+    }
+
+    const config = data as Record<string, unknown>;
+    
+    // Check for required top-level properties
+    const requiredProps = ['bindAddress', 'bindPort', 'a2s', 'rcon', 'game', 'operating'];
+    for (const prop of requiredProps) {
+      if (!(prop in config)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /**
+   * Validate numeric ranges - structural validation
+   */
+  private validateRanges(config: ServerConfig): string[] {
+    const errors: string[] = [];
+
+    // Port validation (these are structural errors)
+    if (config.bindPort < 1024 || config.bindPort > 65535) {
+      errors.push(`bindPort must be between 1024 and 65535, got: ${config.bindPort}`);
+    }
+
+    // Player count validation (these are structural errors)
+    if (config.game.maxPlayers < 1 || config.game.maxPlayers > 128) {
+      errors.push(`maxPlayers must be between 1 and 128, got: ${config.game.maxPlayers}`);
+    }
+
+    return errors;
+  }
+}
+
+// Export a convenience instance
+export const parser = new Parser();
+
+// Convenience function that uses the default instance
+export function parse(
+  input: string | object | unknown,
+  options?: {
+    validate?: boolean;
+    ignore_warnings?: string[];
+    ignore_errors?: string[];
+  }
+): ParseResult<ServerConfig> {
+  return parser.parse(input, options);
+}
+
+/**
+ * Legacy parser options interface for backwards compatibility
+ */
+export interface ParserOptions {
+  strict?: boolean;           // Strict validation (fail on unknown properties)
+  allowDefaults?: boolean;    // Fill in missing properties with defaults
+  validateRanges?: boolean;   // Validate numeric ranges (ports, player counts, etc.)
+}
+
+/**
+ * Legacy server configuration parser class for backwards compatibility
+ */
+export class ServerConfigParser {
+  private options: Required<ParserOptions>;
+  private internalParser = new Parser();
+
+  constructor(options: ParserOptions = {}) {
+    this.options = {
+      strict: options.strict ?? false,
+      allowDefaults: options.allowDefaults ?? true,
+      validateRanges: options.validateRanges ?? true
+    };
+  }
+
+  /**
+   * Parse a complete server configuration from JSON
+   */
+  parseServerConfig(json: string | object): ParseResult<ServerConfig> {
+    // Delegate to the new Parser class
+    return this.internalParser.parse(json, {
+      validate: this.options.validateRanges,
+      ignore_warnings: [],
+      ignore_errors: []
+    });
+  }
+
+  /**
+   * Validate a server configuration without parsing
+   */
+  validateServerConfig(config: unknown): ParseResult<ServerConfig> {
+    // Delegate to the new Parser class
+    return this.internalParser.parse(config, {
+      validate: true,
+      ignore_warnings: [],
+      ignore_errors: []
+    });
+  }
+}
+
+/**
+ * Convenience function for quick parsing (legacy compatibility)
  */
 export function parseServerConfig(
   json: string | object, 
@@ -710,7 +754,7 @@ export function parseServerConfig(
 }
 
 /**
- * Convenience function for validation only
+ * Convenience function for validation only (legacy compatibility)
  */
 export function validateServerConfig(
   config: unknown,
@@ -719,34 +763,3 @@ export function validateServerConfig(
   const parser = new ServerConfigParser(options);
   return parser.validateServerConfig(config);
 }
-
-/**
- * Validation constants for Arma Reforger server configuration
- * Based on official documentation from the server config wiki
- */
-const VALIDATION_CONSTANTS = {
-  VIEW_DISTANCE: {
-    MINIMUM: 500,
-    RECOMMENDED_MAX: 2500,  // Performance impact starts to become significant above this
-    ABSOLUTE_MAX: 10000,
-    NETWORK_RECOMMENDED_RATIO: 0.9  // Network view distance should be ~90% of server view distance
-  },
-  PLAYER_COUNT: {
-    MINIMUM: 1,
-    RECOMMENDED_MAX: 96,    // Performance impact increases significantly above this
-    ABSOLUTE_MAX: 128
-  },
-  GRASS_DISTANCE: {
-    HIGH_PERFORMANCE_IMPACT: 100  // Values above this may significantly impact performance
-  },
-  AI_LIMIT: {
-    HIGH_PERFORMANCE_IMPACT: 80  // Values above this may significantly impact performance
-  },
-  PORTS: {
-    MINIMUM: 1024,
-    MAXIMUM: 65535
-  },
-  PASSWORD: {
-    MINIMUM_LENGTH: 3  // According to wiki: "must be at least 3 characters long"
-  }
-} as const;

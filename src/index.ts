@@ -28,6 +28,11 @@ export const validateServerConfig = server.validateServerConfig;
 export const ParserWarningType = server.ParserWarningType;
 export const ParserErrorType = server.ParserErrorType;
 
+// Export new parser architecture
+export const Parser = server.Parser;
+export const parse = server.parse;
+export const parser = server.parser;
+
 // Export mod extension functions
 export const createExtendedMod = server.createExtendedMod;
 export const getModWorkshopUrl = server.getModWorkshopUrl;

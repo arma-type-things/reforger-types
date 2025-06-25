@@ -123,28 +123,67 @@ describe('Convenience Functions', () => {
   });
 });
 
-describe('Future Parser Features (Placeholders)', () => {
-  test('should have parseGameConfig method', () => {
-    const parser = new ServerConfigParser();
-    expect(typeof parser.parseGameConfig).toBe('function');
+describe('New Parser Architecture', () => {
+  test('should export Parser class', async () => {
+    const { Parser } = await import('../dist/server/parser.js');
+    expect(typeof Parser).toBe('function');
+    
+    const parser = new Parser();
+    expect(typeof parser.parse).toBe('function');
   });
 
-  test('should have parseGameProperties method', () => {
-    const parser = new ServerConfigParser();
-    expect(typeof parser.parseGameProperties).toBe('function');
+  test('should export default parser instance', async () => {
+    const { parser } = await import('../dist/server/parser.js');
+    expect(typeof parser.parse).toBe('function');
   });
 
-  test('parseGameConfig should handle basic input', () => {
-    const parser = new ServerConfigParser();
-    const gameConfig = {
-      name: 'Test Game',
-      maxPlayers: 32,
-      scenarioId: 'test-scenario'
+  test('should export top-level parse function', async () => {
+    const { parse } = await import('../dist/server/parser.js');
+    expect(typeof parse).toBe('function');
+  });
+
+  test('Parser.parse should handle validation options', async () => {
+    const { Parser } = await import('../dist/server/parser.js');
+    const parser = new Parser();
+    
+    const validConfig = {
+      bindAddress: '0.0.0.0',
+      bindPort: 2001,
+      a2s: { address: '', port: 2002 },
+      rcon: { address: '', port: 2003, password: '' },
+      game: {
+        name: 'Test',
+        maxPlayers: 32,
+        gameProperties: {
+          serverMaxViewDistance: 2000,
+          networkViewDistance: 1000,
+          serverMinGrassDistance: 50
+        },
+        mods: []
+      },
+      operating: {
+        aiLimit: 50,
+        joinQueue: { maxSize: 10 }
+      }
     };
     
-    const result = parser.parseGameConfig(gameConfig);
-    // For now, just test that it doesn't crash
-    expect(result).toBeDefined();
-    expect(typeof result.success).toBe('boolean');
+    // Test with validation enabled
+    const result1 = parser.parse(validConfig, { validate: true });
+    expect(result1).toBeDefined();
+    expect(typeof result1.success).toBe('boolean');
+    
+    // Test with validation disabled
+    const result2 = parser.parse(validConfig, { validate: false });
+    expect(result2).toBeDefined();
+    expect(typeof result2.success).toBe('boolean');
+    
+    // Test with ignore options
+    const result3 = parser.parse(validConfig, { 
+      validate: true,
+      ignore_warnings: ['EMPTY_ADMIN_PASSWORD'],
+      ignore_errors: []
+    });
+    expect(result3).toBeDefined();
+    expect(typeof result3.success).toBe('boolean');
   });
 });

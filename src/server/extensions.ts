@@ -45,6 +45,11 @@ export interface ModExtended extends BaseMod {
 /**
  * Creates an extended Mod object with computed properties
  */
+/**
+ * Creates an extended Mod object with computed properties like workshop URLs
+ * @param mod - Base mod object containing modId and optional metadata
+ * @returns ModExtended object with additional computed properties
+ */
 export function createExtendedMod(mod: BaseMod): ModExtended {
   return {
     ...mod,
@@ -97,6 +102,11 @@ function modIdFromUrl(url: string): string | null {
 
 /**
  * Validates if a string is a valid mod ID (16 character hex string)
+ */
+/**
+ * Validates if a string is a valid Arma Reforger mod ID
+ * @param modId - String to validate
+ * @returns True if the string is a valid 16-character uppercase hex mod ID
  */
 export function isValidModId(modId: string): boolean {
   return /^[A-F0-9]{16}$/.test(modId);

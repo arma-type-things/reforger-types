@@ -79,7 +79,7 @@ import {
   
   // Mod utilities
   createExtendedMod,
-  modIdFromUrl,
+  createModExtendedFromUrl,
   
   // Types (TypeScript only)
   ServerConfig,
@@ -88,7 +88,7 @@ import {
 } from 'reforger-types';
 ```
 
-**Tip**: All functions include comprehensive JSDoc comments. Use your IDE's IntelliSense to explore available options and parameters.
+**Tip**: All core functions include JSDoc comments. Use your IDE's IntelliSense to explore available options and parameters.
 
 ## Key Concepts
 

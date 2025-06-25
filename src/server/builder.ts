@@ -10,6 +10,13 @@ import {
 } from './defaults.js';
 import { createModListFromUrls, isValidModId, getEffectiveModName } from './extensions.js';
 
+/**
+ * Builder pattern interface for server configuration generation
+ * 
+ * Provides a fluent API for step-by-step server configuration creation with validation
+ * and flexible customization. Recommended approach for building server configurations,
+ * especially when dealing with user input or complex configuration scenarios.
+ */
 export interface IServerConfigBuilder {
   // Core server settings
   setBindAddress(address: string): this;
@@ -52,6 +59,27 @@ export interface IServerConfigBuilder {
   reset(): this;
 }
 
+/**
+ * Recommended builder for creating Arma Reforger server configurations
+ * 
+ * Provides a fluent, chainable API for step-by-step server configuration creation.
+ * Automatically handles validation, port allocation, and provides sensible defaults.
+ * Ideal for applications that need to build configurations from user input or
+ * require granular control over the configuration process.
+ * 
+ * @example
+ * ```typescript
+ * import { ServerConfigBuilder, OfficialScenarios } from 'reforger-types';
+ * 
+ * const config = new ServerConfigBuilder('My Server', OfficialScenarios.CONFLICT_EVERON)
+ *   .setMaxPlayers(64)
+ *   .setBindPort(2001)
+ *   .setCrossPlatform(true)
+ *   .setRconPassword('admin123')
+ *   .addModsFromUrls(['https://reforger.armaplatform.com/workshop/...'])
+ *   .build();
+ * ```
+ */
 export class ServerConfigBuilder implements IServerConfigBuilder {
   private _bindAddress: string = "0.0.0.0";
   private _bindPort: number = 2001;
@@ -69,6 +97,11 @@ export class ServerConfigBuilder implements IServerConfigBuilder {
   private _playerSaveTime: number = 120;
   private _aiLimit: number = -1;
 
+  /**
+   * Creates a new ServerConfigBuilder instance
+   * @param serverName - Initial server display name (optional)
+   * @param scenarioId - Initial scenario configuration path (optional)
+   */
   constructor(serverName?: string, scenarioId?: string) {
     if (serverName) this._serverName = serverName;
     if (scenarioId) this._scenarioId = scenarioId;
@@ -80,6 +113,11 @@ export class ServerConfigBuilder implements IServerConfigBuilder {
     return this;
   }
 
+  /**
+   * Sets the main server port (A2S will use port + 1, RCON will use port + 2)
+   * @param port - Port number (1024-65535)
+   * @returns This builder instance for chaining
+   */
   setBindPort(port: number): this {
     this._bindPort = port;
     return this;
@@ -111,6 +149,11 @@ export class ServerConfigBuilder implements IServerConfigBuilder {
     return this;
   }
 
+  /**
+   * Enables or disables cross-platform play (PC, Xbox, PlayStation)
+   * @param enabled - True for cross-platform, false for PC only
+   * @returns This builder instance for chaining
+   */
   setCrossPlatform(enabled: boolean): this {
     this._crossPlatform = enabled;
     return this;
@@ -227,6 +270,10 @@ export class ServerConfigBuilder implements IServerConfigBuilder {
     return config;
   }
 
+  /**
+   * Builds the complete server configuration from all set options
+   * @returns Complete ServerConfig object ready for JSON serialization
+   */
   build(): ServerConfig {
     const publicAddress = this._publicAddress || this._bindAddress;
     const publicPort = this._publicPort || this._bindPort;
