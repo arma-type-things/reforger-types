@@ -109,7 +109,6 @@ import {
 ```bash
 npm run build    # Compile TypeScript
 npm test         # Run all tests (Node.js + Bun + integration)
-npm run dev      # Watch mode compilation
 ```
 
 Requires Node.js 22+ and Bun for testing.
