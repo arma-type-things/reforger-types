@@ -13,6 +13,43 @@ import {
 import { isValidModId, getEffectiveModName } from './extensions.js';
 
 /**
+ * Enumeration of parser error types for hard validation failures
+ */
+export enum ParserErrorType {
+  // RCON errors
+  RCON_PASSWORD_TOO_SHORT = 'RCON_PASSWORD_TOO_SHORT',
+  RCON_PASSWORD_CONTAINS_SPACES = 'RCON_PASSWORD_CONTAINS_SPACES',
+  RCON_INVALID_PERMISSION = 'RCON_INVALID_PERMISSION',
+  
+  // Game configuration errors
+  GAME_NAME_TOO_LONG = 'GAME_NAME_TOO_LONG',
+  ADMIN_PASSWORD_CONTAINS_SPACES = 'ADMIN_PASSWORD_CONTAINS_SPACES',
+  ADMINS_LIST_TOO_LONG = 'ADMINS_LIST_TOO_LONG',
+  
+  // Game properties errors
+  SERVER_VIEW_DISTANCE_OUT_OF_RANGE = 'SERVER_VIEW_DISTANCE_OUT_OF_RANGE',
+  NETWORK_VIEW_DISTANCE_OUT_OF_RANGE = 'NETWORK_VIEW_DISTANCE_OUT_OF_RANGE',
+  GRASS_DISTANCE_INVALID = 'GRASS_DISTANCE_INVALID',
+  
+  // Operating configuration errors
+  SLOT_RESERVATION_TIMEOUT_OUT_OF_RANGE = 'SLOT_RESERVATION_TIMEOUT_OUT_OF_RANGE',
+  
+  // Platform errors
+  INVALID_SUPPORTED_PLATFORM = 'INVALID_SUPPORTED_PLATFORM'
+}
+
+/**
+ * Parser error with contextual information
+ */
+export interface ParserError {
+  type: ParserErrorType;
+  message: string;
+  field?: string;
+  value?: unknown;
+  validRange?: string;
+}
+
+/**
  * Enumeration of parser warning types
  */
 export enum ParserWarningType {
@@ -58,6 +95,7 @@ export interface ParseResult<T> {
   data?: T;
   errors: string[];
   warnings: ParserWarning[];
+  validationErrors: ParserError[];
 }
 
 export interface ParserOptions {
@@ -83,6 +121,7 @@ export class ServerConfigParser {
   parseServerConfig(json: string | object): ParseResult<ServerConfig> {
     const errors: string[] = [];
     const warnings: ParserWarning[] = [];
+    const validationErrors: ParserError[] = [];
 
     try {
       const data = typeof json === 'string' ? JSON.parse(json) : json;
@@ -90,27 +129,31 @@ export class ServerConfigParser {
       // Basic structure validation
       if (!this.isValidServerConfigStructure(data)) {
         errors.push('Invalid server configuration structure');
-        return { success: false, errors, warnings };
+        return { success: false, errors, warnings, validationErrors };
       }
 
       const config = data as ServerConfig;
 
       // Perform comprehensive validation and warning checks
-      const validationErrors = this.validateRanges(config);
-      errors.push(...validationErrors);
+      const rangeErrors = this.validateRanges(config);
+      errors.push(...rangeErrors);
+
+      // Perform hard validation checks that should cause parsing to fail
+      this.validateHardRequirements(config, validationErrors);
 
       // Generate warnings for configuration issues
       this.generateConfigurationWarnings(config, warnings);
 
       return {
-        success: errors.length === 0,
-        data: config,
+        success: errors.length === 0 && validationErrors.length === 0,
+        data: errors.length === 0 && validationErrors.length === 0 ? config : undefined,
         errors,
-        warnings
+        warnings,
+        validationErrors
       };
     } catch (error) {
       errors.push(`JSON parsing failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      return { success: false, errors, warnings };
+      return { success: false, errors, warnings, validationErrors };
     }
   }
 
@@ -120,6 +163,7 @@ export class ServerConfigParser {
   parseGameConfig(json: string | object): ParseResult<GameConfig> {
     const errors: string[] = [];
     const warnings: ParserWarning[] = [];
+    const validationErrors: ParserError[] = [];
 
     try {
       const data = typeof json === 'string' ? JSON.parse(json) : json;
@@ -129,11 +173,12 @@ export class ServerConfigParser {
         success: true,
         data: data as GameConfig,
         errors,
-        warnings
+        warnings,
+        validationErrors
       };
     } catch (error) {
       errors.push(`JSON parsing failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      return { success: false, errors, warnings };
+      return { success: false, errors, warnings, validationErrors };
     }
   }
 
@@ -143,6 +188,7 @@ export class ServerConfigParser {
   parseGameProperties(json: string | object): ParseResult<GameProperties> {
     const errors: string[] = [];
     const warnings: ParserWarning[] = [];
+    const validationErrors: ParserError[] = [];
 
     try {
       const data = typeof json === 'string' ? JSON.parse(json) : json;
@@ -152,11 +198,12 @@ export class ServerConfigParser {
         success: true,
         data: data as GameProperties,
         errors,
-        warnings
+        warnings,
+        validationErrors
       };
     } catch (error) {
       errors.push(`JSON parsing failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      return { success: false, errors, warnings };
+      return { success: false, errors, warnings, validationErrors };
     }
   }
 
@@ -166,28 +213,202 @@ export class ServerConfigParser {
   validateServerConfig(config: unknown): ParseResult<ServerConfig> {
     const errors: string[] = [];
     const warnings: ParserWarning[] = [];
+    const validationErrors: ParserError[] = [];
 
     // Basic structure validation
     if (!this.isValidServerConfigStructure(config)) {
       errors.push('Invalid server configuration structure');
-      return { success: false, errors, warnings };
+      return { success: false, errors, warnings, validationErrors };
     }
 
     const serverConfig = config as ServerConfig;
 
     // Perform comprehensive validation and warning checks
-    const validationErrors = this.validateRanges(serverConfig);
-    errors.push(...validationErrors);
+    const rangeErrors = this.validateRanges(serverConfig);
+    errors.push(...rangeErrors);
+
+    // Perform hard validation checks
+    this.validateHardRequirements(serverConfig, validationErrors);
 
     // Generate warnings for configuration issues
     this.generateConfigurationWarnings(serverConfig, warnings);
 
     return {
-      success: errors.length === 0,
-      data: errors.length === 0 ? serverConfig : undefined,
+      success: errors.length === 0 && validationErrors.length === 0,
+      data: errors.length === 0 && validationErrors.length === 0 ? serverConfig : undefined,
       errors,
-      warnings
+      warnings,
+      validationErrors
     };
+  }
+
+  /**
+   * Validate hard requirements that should cause parsing to fail
+   */
+  private validateHardRequirements(config: ServerConfig, validationErrors: ParserError[]): void {
+    // RCON validation
+    this.validateRconHardRequirements(config.rcon, validationErrors);
+    
+    // Game configuration validation
+    this.validateGameConfigHardRequirements(config.game, validationErrors);
+    
+    // Game properties validation
+    this.validateGamePropertiesHardRequirements(config.game.gameProperties, validationErrors);
+    
+    // Operating configuration validation
+    this.validateOperatingConfigHardRequirements(config.operating, validationErrors);
+  }
+
+  /**
+   * Validate RCON hard requirements
+   */
+  private validateRconHardRequirements(rconConfig: RconConfig, validationErrors: ParserError[]): void {
+    // Only validate RCON requirements if RCON is being used (password is provided)
+    if (!rconConfig.password || rconConfig.password.length === 0) {
+      // RCON is optional - no validation needed if password is empty
+      return;
+    }
+
+    // RCON password must be at least 3 characters if provided
+    if (rconConfig.password.length < 3) {
+      validationErrors.push({
+        type: ParserErrorType.RCON_PASSWORD_TOO_SHORT,
+        message: `RCON password must be at least 3 characters long. Current length: ${rconConfig.password.length}`,
+        field: 'rcon.password',
+        value: rconConfig.password.length,
+        validRange: '3+ characters'
+      });
+    }
+
+    // RCON password cannot contain spaces
+    if (rconConfig.password.includes(' ')) {
+      validationErrors.push({
+        type: ParserErrorType.RCON_PASSWORD_CONTAINS_SPACES,
+        message: 'RCON password cannot contain spaces',
+        field: 'rcon.password',
+        value: rconConfig.password
+      });
+    }
+
+    // RCON permission must be valid
+    if (rconConfig.permission && !['admin', 'monitor'].includes(rconConfig.permission)) {
+      validationErrors.push({
+        type: ParserErrorType.RCON_INVALID_PERMISSION,
+        message: `Invalid RCON permission: ${rconConfig.permission}. Must be 'admin' or 'monitor'`,
+        field: 'rcon.permission',
+        value: rconConfig.permission,
+        validRange: 'admin | monitor'
+      });
+    }
+  }
+
+  /**
+   * Validate game configuration hard requirements
+   */
+  private validateGameConfigHardRequirements(gameConfig: GameConfig, validationErrors: ParserError[]): void {
+    // Game name cannot exceed 100 characters
+    if (gameConfig.name && gameConfig.name.length > 100) {
+      validationErrors.push({
+        type: ParserErrorType.GAME_NAME_TOO_LONG,
+        message: `Game name cannot exceed 100 characters. Current length: ${gameConfig.name.length}`,
+        field: 'game.name',
+        value: gameConfig.name.length,
+        validRange: '0-100 characters'
+      });
+    }
+
+    // Admin password cannot contain spaces
+    if (gameConfig.passwordAdmin && gameConfig.passwordAdmin.includes(' ')) {
+      validationErrors.push({
+        type: ParserErrorType.ADMIN_PASSWORD_CONTAINS_SPACES,
+        message: 'Admin password cannot contain spaces',
+        field: 'game.passwordAdmin',
+        value: gameConfig.passwordAdmin
+      });
+    }
+
+    // Admins list cannot exceed 20 entries
+    if (gameConfig.admins && gameConfig.admins.length > 20) {
+      validationErrors.push({
+        type: ParserErrorType.ADMINS_LIST_TOO_LONG,
+        message: `Admins list cannot exceed 20 entries. Current count: ${gameConfig.admins.length}`,
+        field: 'game.admins',
+        value: gameConfig.admins.length,
+        validRange: '0-20 entries'
+      });
+    }
+
+    // Validate supported platforms
+    if (gameConfig.supportedPlatforms) {
+      const validPlatforms = ['PLATFORM_PC', 'PLATFORM_XBL', 'PLATFORM_PSN'];
+      gameConfig.supportedPlatforms.forEach((platform, index) => {
+        if (!validPlatforms.includes(platform)) {
+          validationErrors.push({
+            type: ParserErrorType.INVALID_SUPPORTED_PLATFORM,
+            message: `Invalid supported platform: ${platform}. Valid platforms: ${validPlatforms.join(', ')}`,
+            field: `game.supportedPlatforms[${index}]`,
+            value: platform,
+            validRange: validPlatforms.join(' | ')
+          });
+        }
+      });
+    }
+  }
+
+  /**
+   * Validate game properties hard requirements
+   */
+  private validateGamePropertiesHardRequirements(gameProperties: GameProperties, validationErrors: ParserError[]): void {
+    // Server view distance must be within 500-10000 range
+    if (gameProperties.serverMaxViewDistance < 500 || gameProperties.serverMaxViewDistance > 10000) {
+      validationErrors.push({
+        type: ParserErrorType.SERVER_VIEW_DISTANCE_OUT_OF_RANGE,
+        message: `Server view distance must be between 500 and 10000. Current value: ${gameProperties.serverMaxViewDistance}`,
+        field: 'game.gameProperties.serverMaxViewDistance',
+        value: gameProperties.serverMaxViewDistance,
+        validRange: '500-10000'
+      });
+    }
+
+    // Network view distance must be within 500-5000 range
+    if (gameProperties.networkViewDistance < 500 || gameProperties.networkViewDistance > 5000) {
+      validationErrors.push({
+        type: ParserErrorType.NETWORK_VIEW_DISTANCE_OUT_OF_RANGE,
+        message: `Network view distance must be between 500 and 5000. Current value: ${gameProperties.networkViewDistance}`,
+        field: 'game.gameProperties.networkViewDistance',
+        value: gameProperties.networkViewDistance,
+        validRange: '500-5000'
+      });
+    }
+
+    // Grass distance must be 0 or between 50-150
+    if (gameProperties.serverMinGrassDistance !== 0 && 
+        (gameProperties.serverMinGrassDistance < 50 || gameProperties.serverMinGrassDistance > 150)) {
+      validationErrors.push({
+        type: ParserErrorType.GRASS_DISTANCE_INVALID,
+        message: `Grass distance must be 0 or between 50 and 150. Current value: ${gameProperties.serverMinGrassDistance}`,
+        field: 'game.gameProperties.serverMinGrassDistance',
+        value: gameProperties.serverMinGrassDistance,
+        validRange: '0 | 50-150'
+      });
+    }
+  }
+
+  /**
+   * Validate operating configuration hard requirements
+   */
+  private validateOperatingConfigHardRequirements(operatingConfig: OperatingConfig, validationErrors: ParserError[]): void {
+    // Slot reservation timeout must be between 5-300 seconds
+    if (operatingConfig.slotReservationTimeout !== undefined && 
+        (operatingConfig.slotReservationTimeout < 5 || operatingConfig.slotReservationTimeout > 300)) {
+      validationErrors.push({
+        type: ParserErrorType.SLOT_RESERVATION_TIMEOUT_OUT_OF_RANGE,
+        message: `Slot reservation timeout must be between 5 and 300 seconds. Current value: ${operatingConfig.slotReservationTimeout}`,
+        field: 'operating.slotReservationTimeout',
+        value: operatingConfig.slotReservationTimeout,
+        validRange: '5-300 seconds'
+      });
+    }
   }
 
   /**
@@ -217,20 +438,14 @@ export class ServerConfigParser {
   private validateRanges(config: ServerConfig): string[] {
     const errors: string[] = [];
 
-    // Port validation
+    // Port validation (these are still structural errors)
     if (config.bindPort < 1024 || config.bindPort > 65535) {
       errors.push(`bindPort must be between 1024 and 65535, got: ${config.bindPort}`);
     }
 
-    // Player count validation
+    // Player count validation (these are still structural errors)
     if (config.game.maxPlayers < 1 || config.game.maxPlayers > 128) {
       errors.push(`maxPlayers must be between 1 and 128, got: ${config.game.maxPlayers}`);
-    }
-
-    // View distance validation
-    if (config.game.gameProperties.serverMaxViewDistance < 500 || 
-        config.game.gameProperties.serverMaxViewDistance > 10000) {
-      errors.push(`serverMaxViewDistance must be between 500 and 10000, got: ${config.game.gameProperties.serverMaxViewDistance}`);
     }
 
     return errors;
@@ -379,8 +594,9 @@ export class ServerConfigParser {
       });
     }
 
-    // Weak RCON password warning
-    if (rconConfig.password.length < VALIDATION_CONSTANTS.PASSWORD.MINIMUM_LENGTH) {
+    // Weak RCON password warning (only if RCON is being used)
+    if (rconConfig.password && rconConfig.password.length > 0 && 
+        rconConfig.password.length < VALIDATION_CONSTANTS.PASSWORD.MINIMUM_LENGTH) {
       warnings.push({
         type: ParserWarningType.WEAK_RCON_PASSWORD,
         message: `RCON password is too short (${rconConfig.password.length} characters). Recommended minimum: ${VALIDATION_CONSTANTS.PASSWORD.MINIMUM_LENGTH} characters.`,

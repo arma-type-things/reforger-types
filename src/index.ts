@@ -26,6 +26,7 @@ export const ServerConfigParser = server.ServerConfigParser;
 export const parseServerConfig = server.parseServerConfig;
 export const validateServerConfig = server.validateServerConfig;
 export const ParserWarningType = server.ParserWarningType;
+export const ParserErrorType = server.ParserErrorType;
 
 // Export mod extension functions
 export const createExtendedMod = server.createExtendedMod;
