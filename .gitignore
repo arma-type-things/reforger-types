@@ -4,6 +4,9 @@ node_modules/
 # Build outputs
 dist/
 
+# Vendor documentation
+docs/
+
 # Logs
 *.log
 npm-debug.log*
