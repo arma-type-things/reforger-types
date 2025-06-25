@@ -32,7 +32,8 @@ export function createDefaultRconConfig(basePort: number, password: string = "")
     password: password,
     permission: "admin",
     blacklist: [],
-    whitelist: []
+    whitelist: [],
+    maxClients: 16  // Wiki default: 16
   };
 }
 
@@ -71,7 +72,8 @@ export function createDefaultGameConfig(
     crossPlatform: crossPlatform,
     supportedPlatforms: supportedPlatforms,
     gameProperties: createDefaultGameProperties(),
-    mods: []
+    mods: [],
+    modsRequiredByDefault: true  // v1.2.1+: boolean, Default: true
   };
 }
 
@@ -80,7 +82,11 @@ export function createDefaultOperatingConfig(): OperatingConfig {
     lobbyPlayerSynchronise: true,
     playerSaveTime: 120,
     aiLimit: -1,
-    slotReservationTimeout: 60
+    slotReservationTimeout: 60,
+    disableCrashReporter: false,      // v0.9.8+: boolean, Default: false
+    disableServerShutdown: false,     // v0.9.8+: boolean, Default: false
+    disableAI: false                  // v1.1.0+: boolean, Default: false
+    // disableNavmeshStreaming: undefined by default (v1.2.0+ spec: not provided = no navmesh streaming disabled)
   };
 }
 

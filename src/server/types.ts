@@ -12,6 +12,7 @@ export interface RconConfig {
   permission: string;
   blacklist: string[];
   whitelist: string[];
+  maxClients?: number;  // v1.1.0+: number (1-16), Default: 16
 }
 
 export type MissionHeaderValue = string | number | boolean;
@@ -60,11 +61,20 @@ export interface GameConfig {
   modsRequiredByDefault?: boolean;
 }
 
+export interface JoinQueueConfig {
+  maxSize: number;  // v1.2.1+: number (0-50), Default: 0 (disabled)
+}
+
 export interface OperatingConfig {
   lobbyPlayerSynchronise: boolean;
   playerSaveTime: number;
   aiLimit: number;
   slotReservationTimeout: number;
+  disableCrashReporter?: boolean;      // v0.9.8+: boolean, Default: false
+  disableServerShutdown?: boolean;     // v0.9.8+: boolean, Default: false
+  disableAI?: boolean;                 // v1.1.0+: boolean, Default: false
+  disableNavmeshStreaming?: boolean | string[];  // v1.0.0: boolean, v1.2.0+: array, Default: undefined
+  joinQueue?: JoinQueueConfig;         // v1.2.1+: configuration for player join queue
 }
 
 export interface ServerConfig {

@@ -20,6 +20,7 @@ export enum ParserErrorType {
   RCON_PASSWORD_TOO_SHORT = 'RCON_PASSWORD_TOO_SHORT',
   RCON_PASSWORD_CONTAINS_SPACES = 'RCON_PASSWORD_CONTAINS_SPACES',
   RCON_INVALID_PERMISSION = 'RCON_INVALID_PERMISSION',
+  RCON_MAX_CLIENTS_OUT_OF_RANGE = 'RCON_MAX_CLIENTS_OUT_OF_RANGE',
   
   // Game configuration errors
   GAME_NAME_TOO_LONG = 'GAME_NAME_TOO_LONG',
@@ -33,6 +34,7 @@ export enum ParserErrorType {
   
   // Operating configuration errors
   SLOT_RESERVATION_TIMEOUT_OUT_OF_RANGE = 'SLOT_RESERVATION_TIMEOUT_OUT_OF_RANGE',
+  JOIN_QUEUE_MAX_SIZE_OUT_OF_RANGE = 'JOIN_QUEUE_MAX_SIZE_OUT_OF_RANGE',
   
   // Platform errors
   INVALID_SUPPORTED_PLATFORM = 'INVALID_SUPPORTED_PLATFORM'
@@ -300,6 +302,19 @@ export class ServerConfigParser {
         validRange: 'admin | monitor'
       });
     }
+
+    // RCON maxClients must be between 1 and 16
+    if (rconConfig.maxClients !== undefined) {
+      if (rconConfig.maxClients < 1 || rconConfig.maxClients > 16) {
+        validationErrors.push({
+          type: ParserErrorType.RCON_MAX_CLIENTS_OUT_OF_RANGE,
+          message: `RCON maxClients must be between 1 and 16. Current value: ${rconConfig.maxClients}`,
+          field: 'rcon.maxClients',
+          value: rconConfig.maxClients,
+          validRange: '1-16'
+        });
+      }
+    }
   }
 
   /**
@@ -408,6 +423,19 @@ export class ServerConfigParser {
         value: operatingConfig.slotReservationTimeout,
         validRange: '5-300 seconds'
       });
+    }
+
+    // Join queue maxSize must be between 0-50
+    if (operatingConfig.joinQueue?.maxSize !== undefined) {
+      if (operatingConfig.joinQueue.maxSize < 0 || operatingConfig.joinQueue.maxSize > 50) {
+        validationErrors.push({
+          type: ParserErrorType.JOIN_QUEUE_MAX_SIZE_OUT_OF_RANGE,
+          message: `Join queue maxSize must be between 0 and 50. Current value: ${operatingConfig.joinQueue.maxSize}`,
+          field: 'operating.joinQueue.maxSize',
+          value: operatingConfig.joinQueue.maxSize,
+          validRange: '0-50'
+        });
+      }
     }
   }
 
