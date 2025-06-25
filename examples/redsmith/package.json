@@ -1,0 +1,35 @@
+{
+  "name": "redsmith",
+  "version": "1.0.0",
+  "description": "Interactive wizard for forging Arma Reforger server configuration files",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "redsmith": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc && node dist/index.js"
+  },
+  "keywords": [
+    "arma",
+    "reforger",
+    "server",
+    "configuration",
+    "wizard",
+    "cli",
+    "redsmith",
+    "forge"
+  ],
+  "dependencies": {
+    "reforger-types": "file:../.."
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
