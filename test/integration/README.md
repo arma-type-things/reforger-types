@@ -26,6 +26,21 @@ Tests the Discord bot example:
 - ✅ Main entry point compiles correctly
 - ✅ Basic import/syntax validation passes
 
+### `parser-example.test.js`
+Tests the parser example:
+- ✅ Example file exists and is accessible
+- ✅ Example runs without errors
+- ✅ Example produces expected output
+- ✅ Example demonstrates key parser features
+
+### `mod-extensions-example.test.js`
+Tests the mod extensions example:
+- ✅ Example file exists and is accessible
+- ✅ Example runs without errors
+- ✅ Example produces expected output
+- ✅ Example demonstrates all key mod extension features
+- ✅ Example produces valid workshop URLs
+
 ## Running Tests
 
 ### Run all integration tests:
@@ -37,6 +52,8 @@ npm run test:integration
 ```bash
 node test/integration/config-validator.test.js
 node test/integration/discord-bot.test.js
+node test/integration/parser-example.test.js
+node test/integration/mod-extensions-example.test.js
 ```
 
 ### Run as part of full test suite:
