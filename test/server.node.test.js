@@ -121,7 +121,7 @@ describe('High-Level Usage - Builder Pattern', () => {
 
     assert.strictEqual(config.game.name, 'After Reset');
     assert.strictEqual(config.bindPort, 2001); // Default port
-    assert.strictEqual(config.game.maxPlayers, 32); // Default max players
+    assert.strictEqual(config.game.maxPlayers, 64); // Default max players
   });
 });
 
@@ -151,7 +151,7 @@ describe('Comprehensive Builder Pattern Tests', () => {
     const config3 = builder.build();
     assert.strictEqual(config3.game.name, 'After Reset');
     assert.strictEqual(config3.bindPort, 2001); // Reset to default
-    assert.strictEqual(config3.game.maxPlayers, 32); // Reset to default
+    assert.strictEqual(config3.game.maxPlayers, 64); // Reset to default
     assert.strictEqual(config3.game.password, ''); // Reset to default
   });
 
