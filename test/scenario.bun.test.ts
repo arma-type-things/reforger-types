@@ -68,7 +68,7 @@ describe('ScenarioId Specific Functionality', () => {
 
   test('should validate scenario paths', () => {
     const validScenario = new ScenarioId('TEST', 'Missions/test.conf');
-    const validScenario2 = new ScenarioId('TEST', 'MyMission/scenario.json');
+    const validScenario2 = new ScenarioId('TEST', 'MyMission/scenario.conf');
     const invalidScenario = new ScenarioId('TEST', 'textures/image.png');
 
     expect(validScenario.isValidScenarioPath()).toBe(true);
