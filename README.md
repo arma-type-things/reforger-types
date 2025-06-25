@@ -104,20 +104,6 @@ import {
 
 **Tip**: All core functions include comprehensive JSDoc comments. Use your IDE's IntelliSense to explore available options, parameters, and examples.
 
-## Key Concepts
-
-- **Port Allocation**: Base port + 1 (A2S) + 2 (RCON)
-- **Cross-Platform**: Set `crossPlatform: true` or configure `supportedPlatforms` 
-- **Validation**: Distinguishes between hard errors and warnings
-- **Mod URLs**: Automatic Steam Workshop URL generation and parsing
-- **Type Safety**: Full TypeScript support with strict typing
-
-## Documentation & Source Code
-
-- **[Examples](./examples/)** - Complete working examples and tutorials
-- **[Wiki Documentation](./docs/server-config-wiki.md)** - Complete configuration reference
-- **[Source Code](./src/)** - Library source code designed for exploration
-
 ## Development
 
 ```bash
