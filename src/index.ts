@@ -25,6 +25,7 @@ export const ServerConfigBuilder = server.ServerConfigBuilder;
 export const ServerConfigParser = server.ServerConfigParser;
 export const parseServerConfig = server.parseServerConfig;
 export const validateServerConfig = server.validateServerConfig;
+export const ParserWarningType = server.ParserWarningType;
 
 // Export mod extension functions
 export const createExtendedMod = server.createExtendedMod;
@@ -53,6 +54,7 @@ export type ServerConfig = server.ServerConfig;
 export type IServerConfigBuilder = server.IServerConfigBuilder;
 export type ParseResult<T> = server.ParseResult<T>;
 export type ParserOptions = server.ParserOptions;
+export type ParserWarning = server.ParserWarning;
 
 // Export scenario utilities for convenience
 export const MissionResourceReference = scenario.MissionResourceReference;

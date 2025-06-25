@@ -10,12 +10,54 @@ import {
   Mod,
   SupportedPlatform
 } from './types.js';
+import { isValidModId, getEffectiveModName } from './extensions.js';
+
+/**
+ * Enumeration of parser warning types
+ */
+export enum ParserWarningType {
+  // View distance warnings
+  VIEW_DISTANCE_EXCEEDS_RECOMMENDED = 'VIEW_DISTANCE_EXCEEDS_RECOMMENDED',
+  VIEW_DISTANCE_EXCEEDS_MAXIMUM = 'VIEW_DISTANCE_EXCEEDS_MAXIMUM',
+  VIEW_DISTANCE_BELOW_MINIMUM = 'VIEW_DISTANCE_BELOW_MINIMUM',
+  NETWORK_VIEW_DISTANCE_MISMATCH = 'NETWORK_VIEW_DISTANCE_MISMATCH',
+  
+  // Player count warnings
+  PLAYER_COUNT_EXCEEDS_RECOMMENDED = 'PLAYER_COUNT_EXCEEDS_RECOMMENDED',
+  
+  // Performance warnings
+  GRASS_DISTANCE_HIGH_PERFORMANCE_IMPACT = 'GRASS_DISTANCE_HIGH_PERFORMANCE_IMPACT',
+  AI_LIMIT_HIGH_PERFORMANCE_IMPACT = 'AI_LIMIT_HIGH_PERFORMANCE_IMPACT',
+  
+  // Security warnings
+  EMPTY_ADMIN_PASSWORD = 'EMPTY_ADMIN_PASSWORD',
+  WEAK_RCON_PASSWORD = 'WEAK_RCON_PASSWORD',
+  
+  // Mod warnings
+  INVALID_MOD_ID = 'INVALID_MOD_ID',
+  DUPLICATE_MOD_ID = 'DUPLICATE_MOD_ID',
+  
+  // Configuration warnings
+  PUBLIC_ADDRESS_MISMATCH = 'PUBLIC_ADDRESS_MISMATCH',
+  PORT_CONFLICT = 'PORT_CONFLICT'
+}
+
+/**
+ * Parser warning with contextual information
+ */
+export interface ParserWarning {
+  type: ParserWarningType;
+  message: string;
+  field?: string;
+  value?: unknown;
+  recommendedValue?: unknown;
+}
 
 export interface ParseResult<T> {
   success: boolean;
   data?: T;
   errors: string[];
-  warnings: string[];
+  warnings: ParserWarning[];
 }
 
 export interface ParserOptions {
@@ -40,21 +82,29 @@ export class ServerConfigParser {
    */
   parseServerConfig(json: string | object): ParseResult<ServerConfig> {
     const errors: string[] = [];
-    const warnings: string[] = [];
+    const warnings: ParserWarning[] = [];
 
     try {
       const data = typeof json === 'string' ? JSON.parse(json) : json;
       
-      // TODO: Implement validation logic
-      // For now, return the data as-is with basic structure check
+      // Basic structure validation
       if (!this.isValidServerConfigStructure(data)) {
         errors.push('Invalid server configuration structure');
         return { success: false, errors, warnings };
       }
 
+      const config = data as ServerConfig;
+
+      // Perform comprehensive validation and warning checks
+      const validationErrors = this.validateRanges(config);
+      errors.push(...validationErrors);
+
+      // Generate warnings for configuration issues
+      this.generateConfigurationWarnings(config, warnings);
+
       return {
-        success: true,
-        data: data as ServerConfig,
+        success: errors.length === 0,
+        data: config,
         errors,
         warnings
       };
@@ -69,7 +119,7 @@ export class ServerConfigParser {
    */
   parseGameConfig(json: string | object): ParseResult<GameConfig> {
     const errors: string[] = [];
-    const warnings: string[] = [];
+    const warnings: ParserWarning[] = [];
 
     try {
       const data = typeof json === 'string' ? JSON.parse(json) : json;
@@ -92,7 +142,7 @@ export class ServerConfigParser {
    */
   parseGameProperties(json: string | object): ParseResult<GameProperties> {
     const errors: string[] = [];
-    const warnings: string[] = [];
+    const warnings: ParserWarning[] = [];
 
     try {
       const data = typeof json === 'string' ? JSON.parse(json) : json;
@@ -115,16 +165,26 @@ export class ServerConfigParser {
    */
   validateServerConfig(config: unknown): ParseResult<ServerConfig> {
     const errors: string[] = [];
-    const warnings: string[] = [];
+    const warnings: ParserWarning[] = [];
 
-    // TODO: Implement comprehensive validation
+    // Basic structure validation
     if (!this.isValidServerConfigStructure(config)) {
       errors.push('Invalid server configuration structure');
+      return { success: false, errors, warnings };
     }
+
+    const serverConfig = config as ServerConfig;
+
+    // Perform comprehensive validation and warning checks
+    const validationErrors = this.validateRanges(serverConfig);
+    errors.push(...validationErrors);
+
+    // Generate warnings for configuration issues
+    this.generateConfigurationWarnings(serverConfig, warnings);
 
     return {
       success: errors.length === 0,
-      data: errors.length === 0 ? config as ServerConfig : undefined,
+      data: errors.length === 0 ? serverConfig : undefined,
       errors,
       warnings
     };
@@ -184,6 +244,214 @@ export class ServerConfigParser {
     // This would merge the provided config with createDefaultServerConfig()
     return config as ServerConfig;
   }
+
+  /**
+   * Generate configuration warnings for potential issues
+   */
+  private generateConfigurationWarnings(config: ServerConfig, warnings: ParserWarning[]): void {
+    // View distance warnings
+    this.validateViewDistances(config.game.gameProperties, warnings);
+    
+    // Player count warnings
+    this.validatePlayerCount(config.game, warnings);
+    
+    // Performance warnings
+    this.validatePerformanceSettings(config.game.gameProperties, config.operating, warnings);
+    
+    // Security warnings
+    this.validateSecuritySettings(config.game, config.rcon, warnings);
+    
+    // Mod warnings
+    this.validateMods(config.game.mods, warnings);
+    
+    // Network warnings
+    this.validateNetworkSettings(config, warnings);
+  }
+
+  /**
+   * Validate view distance settings and generate warnings
+   */
+  private validateViewDistances(gameProperties: GameProperties, warnings: ParserWarning[]): void {
+    const serverViewDistance = gameProperties.serverMaxViewDistance;
+    const networkViewDistance = gameProperties.networkViewDistance;
+
+    // Check if view distance exceeds recommended maximum
+    if (serverViewDistance > VALIDATION_CONSTANTS.VIEW_DISTANCE.RECOMMENDED_MAX) {
+      warnings.push({
+        type: ParserWarningType.VIEW_DISTANCE_EXCEEDS_RECOMMENDED,
+        message: `Server view distance (${serverViewDistance}) exceeds recommended maximum of ${VALIDATION_CONSTANTS.VIEW_DISTANCE.RECOMMENDED_MAX}. This may impact server performance.`,
+        field: 'game.gameProperties.serverMaxViewDistance',
+        value: serverViewDistance,
+        recommendedValue: VALIDATION_CONSTANTS.VIEW_DISTANCE.RECOMMENDED_MAX
+      });
+    }
+
+    // Check if view distance exceeds absolute maximum
+    if (serverViewDistance > VALIDATION_CONSTANTS.VIEW_DISTANCE.ABSOLUTE_MAX) {
+      warnings.push({
+        type: ParserWarningType.VIEW_DISTANCE_EXCEEDS_MAXIMUM,
+        message: `Server view distance (${serverViewDistance}) exceeds maximum supported value of ${VALIDATION_CONSTANTS.VIEW_DISTANCE.ABSOLUTE_MAX}.`,
+        field: 'game.gameProperties.serverMaxViewDistance',
+        value: serverViewDistance,
+        recommendedValue: VALIDATION_CONSTANTS.VIEW_DISTANCE.ABSOLUTE_MAX
+      });
+    }
+
+    // Check if view distance is below minimum
+    if (serverViewDistance < VALIDATION_CONSTANTS.VIEW_DISTANCE.MINIMUM) {
+      warnings.push({
+        type: ParserWarningType.VIEW_DISTANCE_BELOW_MINIMUM,
+        message: `Server view distance (${serverViewDistance}) is below minimum recommended value of ${VALIDATION_CONSTANTS.VIEW_DISTANCE.MINIMUM}.`,
+        field: 'game.gameProperties.serverMaxViewDistance',
+        value: serverViewDistance,
+        recommendedValue: VALIDATION_CONSTANTS.VIEW_DISTANCE.MINIMUM
+      });
+    }
+
+    // Check network view distance vs server view distance ratio
+    const recommendedNetworkDistance = Math.floor(serverViewDistance * VALIDATION_CONSTANTS.VIEW_DISTANCE.NETWORK_RECOMMENDED_RATIO);
+    if (networkViewDistance > serverViewDistance) {
+      warnings.push({
+        type: ParserWarningType.NETWORK_VIEW_DISTANCE_MISMATCH,
+        message: `Network view distance (${networkViewDistance}) should not exceed server view distance (${serverViewDistance}).`,
+        field: 'game.gameProperties.networkViewDistance',
+        value: networkViewDistance,
+        recommendedValue: recommendedNetworkDistance
+      });
+    }
+  }
+
+  /**
+   * Validate player count settings
+   */
+  private validatePlayerCount(gameConfig: GameConfig, warnings: ParserWarning[]): void {
+    const maxPlayers = gameConfig.maxPlayers;
+
+    if (maxPlayers > VALIDATION_CONSTANTS.PLAYER_COUNT.RECOMMENDED_MAX) {
+      warnings.push({
+        type: ParserWarningType.PLAYER_COUNT_EXCEEDS_RECOMMENDED,
+        message: `Player count (${maxPlayers}) exceeds recommended maximum of ${VALIDATION_CONSTANTS.PLAYER_COUNT.RECOMMENDED_MAX}. Consider server performance impact.`,
+        field: 'game.maxPlayers',
+        value: maxPlayers,
+        recommendedValue: VALIDATION_CONSTANTS.PLAYER_COUNT.RECOMMENDED_MAX
+      });
+    }
+  }
+
+  /**
+   * Validate performance-related settings
+   */
+  private validatePerformanceSettings(gameProperties: GameProperties, operating: OperatingConfig, warnings: ParserWarning[]): void {
+    // Grass distance performance warning
+    if (gameProperties.serverMinGrassDistance > VALIDATION_CONSTANTS.GRASS_DISTANCE.HIGH_PERFORMANCE_IMPACT) {
+      warnings.push({
+        type: ParserWarningType.GRASS_DISTANCE_HIGH_PERFORMANCE_IMPACT,
+        message: `Grass distance (${gameProperties.serverMinGrassDistance}) may significantly impact server performance.`,
+        field: 'game.gameProperties.serverMinGrassDistance',
+        value: gameProperties.serverMinGrassDistance,
+        recommendedValue: VALIDATION_CONSTANTS.GRASS_DISTANCE.HIGH_PERFORMANCE_IMPACT
+      });
+    }
+
+    // AI limit performance warning (only warn if aiLimit is positive and above threshold)
+    if (operating.aiLimit > 0 && operating.aiLimit > VALIDATION_CONSTANTS.AI_LIMIT.HIGH_PERFORMANCE_IMPACT) {
+      warnings.push({
+        type: ParserWarningType.AI_LIMIT_HIGH_PERFORMANCE_IMPACT,
+        message: `AI limit (${operating.aiLimit}) may significantly impact server performance.`,
+        field: 'operating.aiLimit',
+        value: operating.aiLimit,
+        recommendedValue: VALIDATION_CONSTANTS.AI_LIMIT.HIGH_PERFORMANCE_IMPACT
+      });
+    }
+  }
+
+  /**
+   * Validate security-related settings
+   */
+  private validateSecuritySettings(gameConfig: GameConfig, rconConfig: RconConfig, warnings: ParserWarning[]): void {
+    // Empty admin password warning
+    if (!gameConfig.passwordAdmin || gameConfig.passwordAdmin.trim() === '') {
+      warnings.push({
+        type: ParserWarningType.EMPTY_ADMIN_PASSWORD,
+        message: 'Admin password is empty. This poses a security risk.',
+        field: 'game.passwordAdmin',
+        value: gameConfig.passwordAdmin
+      });
+    }
+
+    // Weak RCON password warning
+    if (rconConfig.password.length < VALIDATION_CONSTANTS.PASSWORD.MINIMUM_LENGTH) {
+      warnings.push({
+        type: ParserWarningType.WEAK_RCON_PASSWORD,
+        message: `RCON password is too short (${rconConfig.password.length} characters). Recommended minimum: ${VALIDATION_CONSTANTS.PASSWORD.MINIMUM_LENGTH} characters.`,
+        field: 'rcon.password',
+        value: rconConfig.password.length,
+        recommendedValue: VALIDATION_CONSTANTS.PASSWORD.MINIMUM_LENGTH
+      });
+    }
+  }
+
+  /**
+   * Validate mod configurations
+   */
+  private validateMods(mods: Mod[], warnings: ParserWarning[]): void {
+    const seenModIds = new Set<string>();
+
+    mods.forEach((mod, index) => {
+      // Invalid mod ID warning
+      if (!isValidModId(mod.modId)) {
+        warnings.push({
+          type: ParserWarningType.INVALID_MOD_ID,
+          message: `Invalid mod ID format: ${mod.modId}. Expected 16-character hexadecimal string. Mod: ${getEffectiveModName(mod)}`,
+          field: `game.mods[${index}].modId`,
+          value: mod.modId
+        });
+      }
+
+      // Duplicate mod ID warning
+      if (seenModIds.has(mod.modId)) {
+        warnings.push({
+          type: ParserWarningType.DUPLICATE_MOD_ID,
+          message: `Duplicate mod ID: ${mod.modId}. Mod: ${getEffectiveModName(mod)}`,
+          field: `game.mods[${index}].modId`,
+          value: mod.modId
+        });
+      } else {
+        seenModIds.add(mod.modId);
+      }
+    });
+  }
+
+  /**
+   * Validate network-related settings
+   */
+  private validateNetworkSettings(config: ServerConfig, warnings: ParserWarning[]): void {
+    // Only warn about public address mismatch if bind address is a specific IP (not 0.0.0.0)
+    // and the addresses are completely different (not just different interfaces)
+    if (config.publicAddress && config.bindAddress && 
+        config.bindAddress !== "0.0.0.0" && 
+        config.publicAddress !== config.bindAddress &&
+        !config.publicAddress.includes('local')) {
+      warnings.push({
+        type: ParserWarningType.PUBLIC_ADDRESS_MISMATCH,
+        message: `Public address (${config.publicAddress}) differs from bind address (${config.bindAddress}). Verify this is correct for your network setup.`,
+        field: 'publicAddress',
+        value: config.publicAddress,
+        recommendedValue: config.bindAddress
+      });
+    }
+
+    // Port conflict warnings
+    const ports = [config.bindPort, config.a2s.port, config.rcon.port];
+    const uniquePorts = new Set(ports);
+    if (uniquePorts.size !== ports.length) {
+      warnings.push({
+        type: ParserWarningType.PORT_CONFLICT,
+        message: `Port conflict detected. Bind port: ${config.bindPort}, A2S port: ${config.a2s.port}, RCON port: ${config.rcon.port}`,
+        field: 'ports'
+      });
+    }
+  }
 }
 
 /**
@@ -207,3 +475,34 @@ export function validateServerConfig(
   const parser = new ServerConfigParser(options);
   return parser.validateServerConfig(config);
 }
+
+/**
+ * Validation constants for Arma Reforger server configuration
+ * Based on official documentation from the server config wiki
+ */
+const VALIDATION_CONSTANTS = {
+  VIEW_DISTANCE: {
+    MINIMUM: 500,
+    RECOMMENDED_MAX: 2500,  // Performance impact starts to become significant above this
+    ABSOLUTE_MAX: 10000,
+    NETWORK_RECOMMENDED_RATIO: 0.9  // Network view distance should be ~90% of server view distance
+  },
+  PLAYER_COUNT: {
+    MINIMUM: 1,
+    RECOMMENDED_MAX: 96,    // Performance impact increases significantly above this
+    ABSOLUTE_MAX: 128
+  },
+  GRASS_DISTANCE: {
+    HIGH_PERFORMANCE_IMPACT: 100  // Values above this may significantly impact performance
+  },
+  AI_LIMIT: {
+    HIGH_PERFORMANCE_IMPACT: 80  // Values above this may significantly impact performance
+  },
+  PORTS: {
+    MINIMUM: 1024,
+    MAXIMUM: 65535
+  },
+  PASSWORD: {
+    MINIMUM_LENGTH: 3  // According to wiki: "must be at least 3 characters long"
+  }
+} as const;
