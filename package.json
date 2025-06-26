@@ -1,6 +1,6 @@
 {
   "name": "reforger-types",
-  "version": "0.0.1-alpha.3",
+  "version": "0.0.1-beta.1",
   "type": "module",
   "description": "TypeScript definitions and examples for Arma Reforger server configuration and tooling",
   "main": "./dist/index.js",
