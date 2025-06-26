@@ -13,7 +13,7 @@ npm install reforger-types
 See the [examples folder](./examples) for complete implementations:
 - **[Discord Bot](./examples/discord-bot/)** - Slash commands for server configuration  
 - **[Config Validator](./examples/config-validator/)** - CLI validation tool
-- **[Redsmith](./examples/redsmith/)** - Interactive wizard for generating server configuration files
+- **[Redsmith](./examples/redsmith/)** - Interactive wizard for server configuration (also available via `npx redsmith`)
 - **[Parser Example](./examples/parser-example.js)** - Configuration parsing and validation
 - **[Mod Extensions Example](./examples/mod-extensions-example.js)** - Workshop URL and mod utilities
 
@@ -71,6 +71,13 @@ const customResult = parse(configObject, {
   ignore_warnings: ['EMPTY_ADMIN_PASSWORD', 'WEAK_RCON_PASSWORD']
 });
 ```
+
+## API Documentation
+
+For detailed API reference, see the [api-docs](./api-docs/) folder:
+- **[Server Module](./api-docs/server/)** - Configuration types, builder patterns, and mod utilities
+- **[Parser Module](./api-docs/parser/)** - Validation engine, error handling, and parsing workflows  
+- **[Scenario Module](./api-docs/scenario/)** - Mission resource references and scenario utilities
 
 ## Core API
 
