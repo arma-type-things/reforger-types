@@ -265,7 +265,7 @@ export class Validator {
     if (serverViewDistance > VALIDATION_CONSTANTS.VIEW_DISTANCE.RECOMMENDED_MAX) {
       warnings.push({
         type: ParserWarningType.VIEW_DISTANCE_EXCEEDS_RECOMMENDED,
-        message: `Server view distance (${serverViewDistance}) exceeds recommended maximum of ${VALIDATION_CONSTANTS.VIEW_DISTANCE.RECOMMENDED_MAX}. This may impact server performance.`,
+        message: `View distance (${serverViewDistance}) exceeds recommended max of ${VALIDATION_CONSTANTS.VIEW_DISTANCE.RECOMMENDED_MAX}.`,
         field: 'game.gameProperties.serverMaxViewDistance',
         value: serverViewDistance,
         recommendedValue: VALIDATION_CONSTANTS.VIEW_DISTANCE.RECOMMENDED_MAX
