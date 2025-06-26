@@ -61,14 +61,105 @@ abstract class BaseWizardStep implements WizardStep {
       type: 'text',
       name: 'value',
       message: question,
-      initial: defaultValue
+      initial: defaultValue,
+      validate: (value: string) => {
+        if (!value || value.trim() === '') {
+          return 'This field cannot be empty';
+        }
+        const trimmedValue = value.trim();
+        if (trimmedValue.length < 1) {
+          return 'Please enter at least 1 character';
+        }
+        if (trimmedValue.length > 256) {
+          return 'Text must be 256 characters or less';
+        }
+        return true;
+      }
     });
     
     if (response.value === undefined) {
       process.exit(0); // User cancelled (Ctrl+C)
     }
     
-    return response.value || defaultValue;
+    return response.value?.trim() || defaultValue;
+  }
+
+  protected async promptFilePath(question: string, defaultValue: string = ''): Promise<string> {
+    const response = await prompts({
+      type: 'text',
+      name: 'value',
+      message: question,
+      initial: defaultValue,
+      validate: (value: string) => {
+        if (!value || value.trim() === '') {
+          return 'File path cannot be empty';
+        }
+        const trimmedValue = value.trim();
+        
+        // Check for invalid characters (basic validation)
+        const invalidChars = /[<>:"|?*]/;
+        if (invalidChars.test(trimmedValue)) {
+          return 'File path contains invalid characters (<>:"|?*)';
+        }
+        
+        // Check if it's a valid file extension for JSON
+        if (!trimmedValue.toLowerCase().endsWith('.json')) {
+          return 'File path must end with .json extension';
+        }
+        
+        // Check if the directory part is valid (if it exists)
+        const dir = path.dirname(trimmedValue);
+        if (dir && dir !== '.' && !path.isAbsolute(dir)) {
+          // For relative paths, check if they start with valid patterns
+          if (!dir.match(/^\.{0,2}[/\\]/) && !dir.match(/^[a-zA-Z0-9._-]+/)) {
+            return 'Invalid directory path format';
+          }
+        }
+        
+        return true;
+      }
+    });
+    
+    if (response.value === undefined) {
+      process.exit(0); // User cancelled (Ctrl+C)
+    }
+    
+    return response.value?.trim() || defaultValue;
+  }
+
+  protected async promptIPAddress(question: string, defaultValue: string = '0.0.0.0'): Promise<string> {
+    const response = await prompts({
+      type: 'text',
+      name: 'value',
+      message: question,
+      initial: defaultValue,
+      validate: (value: string) => {
+        if (!value || value.trim() === '') {
+          return 'IP address cannot be empty';
+        }
+        // Allow special values like "0.0.0.0" or basic IP format validation
+        const trimmedValue = value.trim();
+        const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
+        if (!ipRegex.test(trimmedValue)) {
+          return 'Please enter a valid IP address (e.g., 192.168.1.1 or 0.0.0.0)';
+        }
+        // Additional validation for IP octets
+        const octets = trimmedValue.split('.');
+        for (const octet of octets) {
+          const num = parseInt(octet, 10);
+          if (num < 0 || num > 255) {
+            return 'IP address octets must be between 0 and 255';
+          }
+        }
+        return true;
+      }
+    });
+    
+    if (response.value === undefined) {
+      process.exit(0); // User cancelled (Ctrl+C)
+    }
+    
+    return response.value?.trim() || defaultValue;
   }
 
   protected async promptNumber(question: string, defaultValue: number, min?: number, max?: number): Promise<number> {
@@ -143,10 +234,10 @@ class NetworkStep extends BaseWizardStep {
 
   async execute(config: RedsmithConfig, layout: LayoutManager): Promise<void> {
     if (!config.bindAddress) {
-      config.bindAddress = await this.promptString('Bind address (IP to bind to)', '0.0.0.0');
+      config.bindAddress = await this.promptIPAddress('Bind address (IP to bind to)', '0.0.0.0');
     }
     if (!config.publicAddress) {
-      config.publicAddress = await this.promptString('Public address (IP for players to connect)', '0.0.0.0');
+      config.publicAddress = await this.promptIPAddress('Public address (IP for players to connect)', '0.0.0.0');
     }
     if (!config.bindPort) {
       config.bindPort = await this.promptNumber('Bind port (main server port)', 2001, 1024, 65535);
@@ -222,7 +313,7 @@ class OutputStep extends BaseWizardStep {
 
   async execute(config: RedsmithConfig, layout: LayoutManager): Promise<void> {
     layout.printSectionHeader('💾 Output Configuration');
-    config.outputPath = await this.promptString('Output file path', './server.json');
+    config.outputPath = await this.promptFilePath('Output file path', './server.json');
     layout.printLine();
   }
 }
