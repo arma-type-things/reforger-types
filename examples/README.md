@@ -4,27 +4,14 @@ This directory contains example projects that demonstrate how to use the reforge
 
 ## 📁 Examples
 
-### [config-validator](./config-validator/)
-A complete TypeScript CLI tool for validating Arma Reforger server configuration files.
+### [redsmith](./redsmith/) ⭐ **Full-Featured Tool**
+An interactive wizard for creating and validating Arma Reforger server configuration files. Now available as a published npm package.
 
 **Features:**
-- Complete TypeScript package with proper project structure
-- Commander.js CLI framework with argument parsing and help
-- Chalk for colored terminal output with emojis
-- Comprehensive validation using the library's parser with detailed error reporting
-- Clear distinction between hard errors and warnings
-- Proper exit codes for CI/CD integration
-
-**Quick Start:**
-```bash
-cd config-validator
-npm install
-npm run build
-npm start configs/valid-server.json
-```
-
-### [redsmith](./redsmith/)
-An interactive wizard for creating Arma Reforger server configuration files. Now available as a published npm package.
+- Interactive wizard for server configuration creation
+- Built-in configuration validation with `redsmith validate <file>`
+- Enhanced input validation for all prompts
+- Released as installable npm package
 
 **Released Package:**
 - Install globally: `npm install -g redsmith`
@@ -37,6 +24,29 @@ cd redsmith
 npm install
 npm run build
 npm start
+```
+
+**Validation:**
+```bash
+# Validate any config file
+redsmith validate path/to/server.json
+```
+
+### [config-validator](./config-validator/) 📚 **Focused Example**
+A simple, focused CLI tool that demonstrates direct usage of reforger-types validation APIs.
+
+**Purpose:**
+- Educational reference for building validation tools
+- Clean example of direct API usage
+- Simple CLI implementation focused on one task
+- Clear demonstration of error handling patterns
+
+**Quick Start:**
+```bash
+cd config-validator
+npm install
+npm run build
+npm start configs/valid-server.json
 ```
 
 ### [discord-bot](./discord-bot/)

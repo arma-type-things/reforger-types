@@ -1,7 +1,7 @@
 {
   "name": "reforger-config-validator-example",
   "version": "1.0.0",
-  "description": "CLI tool for validating Arma Reforger server configuration files",
+  "description": "Focused CLI example demonstrating reforger-types validation APIs",
   "main": "dist/cli.js",
   "bin": {
     "validate-config": "dist/cli.js"

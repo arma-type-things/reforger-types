@@ -1,8 +1,31 @@
 # Server Configuration Validator
 
+A focused TypeScript CLI tool that demonstrates how to validate Arma Reforger server configuration files using the reforger-types parser directly.
+
+## Purpose
+
+This example shows how to build a simple, single-purpose validation tool using the reforger-types library. It demonstrates:
+
+- **Direct API usage** - Shows how to use the parser's validation features directly
+- **Clean CLI implementation** - Simple command-line interface focused on one task
+- **Error handling patterns** - How to properly handle and display validation results
+- **Educational reference** - Clear, focused code that's easy to understand and learn from
+
+## Comparison with Redsmith
+
+For production use, consider [redsmith](../redsmith/) which includes both configuration creation and validation in a comprehensive tool. This config-validator example is intentionally simple and focused to demonstrate the core validation APIs.
+
 A TypeScript CLI tool for validating Arma Reforger server configuration files using the reforger-types parser.
 
 ## Features
+
+- **Direct API demonstration** - Shows clean usage of reforger-types validation
+- **JSON Validation** - Validates JSON syntax and structure
+- **Configuration Validation** - Comprehensive validation using the reforger-types parser
+- **Error Reporting** - Clear distinction between hard errors and warnings
+- **Pretty Output** - Color-coded output with emojis and detailed information
+- **CLI Framework** - Built with Commander.js for proper argument parsing
+- **Exit Codes** - Proper exit codes for CI/CD integration
 
 - **JSON Validation**: Validates JSON syntax and structure
 - **Configuration Validation**: Comprehensive validation using the reforger-types parser
