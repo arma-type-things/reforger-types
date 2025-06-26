@@ -79,36 +79,38 @@ export class ConfigValidator {
       return;
     }
 
-    // Display summary
-    this.layout.printSectionHeader('📊 Validation Summary');
-    this.layout.printLabelValue('Errors: ', result.errors.length.toString());
-    this.layout.printLabelValue('Warnings: ', result.warnings.length.toString());
+    // Display summary banner with right-aligned title
+    const summaryContent = `Errors: ${result.errors.length}\nWarnings: ${result.warnings.length}`;
+    this.layout.printBanner(summaryContent, undefined, {
+      title: '📊 Validation Summary',
+      titleAlignment: 'right',
+      textAlign: 'left'
+    });
     this.layout.printLine();
 
-    // Display errors first
+    // Display errors in error banner
     if (result.hasErrors) {
-      this.layout.printWithPrefix('🚨 ERRORS ', `(${result.errors.length}):`, 'errorColor', 'errorColor');
-      this.layout.printMixed({ text: 'These issues prevent the server from starting properly.', colorKey: 'errorColor' });
+      const errorContent = this.formatIssuesForBanner(result.errors, true);
+      const errorDescription = 'These issues prevent the server from starting properly.\n\n';
+      this.layout.printErrorBanner(
+        errorDescription + errorContent,
+        `ERRORS (${result.errors.length})`
+      );
       this.layout.printLine();
-      
-      result.errors.forEach((error, index) => {
-        this.displayIssue(error, index + 1, true);
-      });
     }
 
-    // Display warnings
+    // Display warnings in warning banner
     if (result.hasWarnings) {
-      this.layout.printWithPrefix('⚠️  WARNINGS ', `(${result.warnings.length}):`, 'valueColor', 'valueColor');
-      this.layout.printMixed({ text: 'These are recommendations for optimal server performance.', colorKey: 'dimColor' });
+      const warningContent = this.formatIssuesForBanner(result.warnings, false);
+      const warningDescription = 'These are recommendations for optimal server performance.\n\n';
+      this.layout.printWarningBanner(
+        warningDescription + warningContent,
+        `WARNINGS (${result.warnings.length})`
+      );
       this.layout.printLine();
-      
-      result.warnings.forEach((warning, index) => {
-        this.displayIssue(warning, index + 1, false);
-      });
     }
 
     // Final status
-    this.layout.printLine();
     this.layout.printMixed({ text: '✨ Validation complete.', colorKey: 'bodyColor' });
     
     if (result.success) {
@@ -119,33 +121,31 @@ export class ConfigValidator {
   }
 
   /**
-   * Format and display a single validation issue
+   * Format validation issues for display in banners
    */
-  private displayIssue(issue: ParserError | ParserWarning, index: number, isError: boolean): void {
-    const icon = isError ? '❌' : '⚠️';
-    const typeLabel = isError ? 'ERROR' : 'WARNING';
-    
-    this.layout.printWithPrefix(`${index}. ${icon} `, `${typeLabel}: ${issue.message}`, 
-      isError ? 'errorColor' : 'valueColor', 'bodyColor');
-    
-    if (issue.field) {
-      this.layout.printLabelValue('   Field: ', issue.field);
-    }
-    
-    if (issue.value !== undefined) {
-      this.layout.printLabelValue('   Value: ', JSON.stringify(issue.value));
-    }
-    
-    // ParserError has validRange, ParserWarning has recommendedValue
-    if (isError && 'validRange' in issue && issue.validRange) {
-      this.layout.printLabelValue('   Valid Range: ', issue.validRange);
-    }
-    
-    if (!isError && 'recommendedValue' in issue && issue.recommendedValue !== undefined) {
-      this.layout.printLabelValue('   Recommended: ', JSON.stringify(issue.recommendedValue));
-    }
-    
-    this.layout.printLine();
+  private formatIssuesForBanner(issues: (ParserError | ParserWarning)[], isError: boolean): string {
+    return issues.map((issue, index) => {
+      let formatted = `${index + 1}. ${issue.message}`;
+      
+      if (issue.field) {
+        formatted += `\n   Field: ${issue.field}`;
+      }
+      
+      if (issue.value !== undefined) {
+        formatted += `\n   Value: ${JSON.stringify(issue.value)}`;
+      }
+      
+      // ParserError has validRange, ParserWarning has recommendedValue
+      if (isError && 'validRange' in issue && issue.validRange) {
+        formatted += `\n   Valid Range: ${issue.validRange}`;
+      }
+      
+      if (!isError && 'recommendedValue' in issue && issue.recommendedValue !== undefined) {
+        formatted += `\n   Recommended: ${JSON.stringify(issue.recommendedValue)}`;
+      }
+      
+      return formatted;
+    }).join('\n\n');
   }
 
   /**
@@ -160,10 +160,22 @@ export class ConfigValidator {
       process.exit(exitCode);
       
     } catch (error: any) {
-      this.layout.printError(`❌ ${error.message}`);
+      this.layout.printBrandedBanner('Config Validator');
+      this.layout.printLine();
+      
+      this.layout.printMixed({ text: '🔍 Validating Arma Reforger server configuration...', colorKey: 'bodyColor' });
+      this.layout.printLabelValue('File: ', path.resolve(configPath));
+      this.layout.printLine();
+      
+      // Show error in banner format
+      this.layout.printErrorBanner(
+        error.message,
+        'VALIDATION ERROR'
+      );
       
       if (process.env.DEBUG) {
-        this.layout.printError('\nStack trace:');
+        this.layout.printLine();
+        this.layout.printMixed({ text: 'Stack trace:', colorKey: 'bodyColor' });
         this.layout.printError(error.stack);
       }
       
