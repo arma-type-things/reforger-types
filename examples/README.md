@@ -24,9 +24,14 @@ npm start configs/valid-server.json
 ```
 
 ### [redsmith](./redsmith/)
-An interactive forge for crafting Arma Reforger server configuration files based on user inputs.
+An interactive wizard for creating Arma Reforger server configuration files. Now available as a published npm package.
 
-**Quick Start:**
+**Released Package:**
+- Install globally: `npm install -g redsmith`
+- Run without installing: `npx redsmith`
+- Use in projects: `npm install redsmith`
+
+**Local Development:**
 ```bash
 cd redsmith
 npm install
