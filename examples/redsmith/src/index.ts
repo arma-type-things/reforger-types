@@ -12,7 +12,7 @@ import {
   type ServerConfig,
   type MissionHeader,
   type OfficialScenarioName
-} from '../../../dist/index.js';
+} from 'reforger-types';
 import { LayoutManager } from './layout.js';
 import { ThemeColors } from './constants.js';
 
