@@ -1,0 +1,36 @@
+{
+  "name": "reforger-config-validator-example",
+  "version": "1.0.0",
+  "description": "CLI tool for validating Arma Reforger server configuration files",
+  "main": "dist/cli.js",
+  "bin": {
+    "validate-config": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/cli.js",
+    "dev": "tsc && node dist/cli.js",
+    "validate:example": "npm run build && node dist/cli.js configs/valid-server.json",
+    "validate:problematic": "npm run build && node dist/cli.js configs/problematic-server.json"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^14.0.0",
+    "reforger-types": "file:../.."
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.4",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "keywords": [
+    "arma-reforger",
+    "server-config",
+    "validation",
+    "cli"
+  ],
+  "author": "",
+  "license": "MIT"
+}

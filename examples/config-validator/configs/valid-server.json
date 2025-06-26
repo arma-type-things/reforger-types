@@ -1,0 +1,61 @@
+{
+  "bindAddress": "0.0.0.0",
+  "bindPort": 2001,
+  "publicAddress": "",
+  "publicPort": 2001,
+  "a2s": {
+    "address": "",
+    "port": 17865
+  },
+  "rcon": {
+    "address": "",
+    "port": 19999,
+    "password": "MySecureRconPassword123!",
+    "maxClients": 8
+  },
+  "game": {
+    "name": "My Reforger Server",
+    "password": "",
+    "passwordAdmin": "MySecureAdminPassword123!",
+    "scenarioId": "{ECC61978EDCC2B5A}Missions/23_Campaign.conf",
+    "playerCountLimit": 32,
+    "visible": true,
+    "crossPlatform": true,
+    "supportedPlatforms": ["PLATFORM_PC", "PLATFORM_XBL", "PLATFORM_PSN"],
+    "gameProperties": {
+      "serverMaxViewDistance": 2500,
+      "serverMinGrassDistance": 50,
+      "networkViewDistance": 1000,
+      "disableThirdPerson": false,
+      "fastValidation": true,
+      "battlEye": true,
+      "VONDisableUI": false,
+      "VONDisableDirectSpeechUI": false,
+      "VONCanTransmitCrossFaction": true,
+      "missionHeader": {
+        "m_sName": "Conflict",
+        "m_sAuthor": "Bohemia Interactive",
+        "m_sDescription": "Conflict on Everon"
+      }
+    },
+    "mods": [
+      {
+        "modId": "595F2BF2F44836FB",
+        "name": "Enhanced Movement"
+      }
+    ],
+    "modsRequiredByDefault": true
+  },
+  "operating": {
+    "lobbyPlayerSynchronise": true,
+    "playerSaveTime": 60,
+    "AILimit": 100,
+    "disableCrashReporter": false,
+    "disableServerShutdown": false,
+    "disableAI": false,
+    "disableNavmeshStreaming": false,
+    "joinQueue": {
+      "maxSize": 20
+    }
+  }
+}

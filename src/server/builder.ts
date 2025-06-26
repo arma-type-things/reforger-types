@@ -1,5 +1,5 @@
 // Builder pattern interfaces for server configuration generation
-import { ServerConfig, GameConfig, GameProperties, OperatingConfig, A2SConfig, RconConfig, SupportedPlatform } from './types.js';
+import { ServerConfig, GameConfig, GameProperties, OperatingConfig, A2SConfig, RconConfig, SupportedPlatform, Mod } from './types.js';
 import {
   createDefaultMissionHeader,
   createDefaultA2SConfig,
@@ -8,7 +8,15 @@ import {
   createDefaultGameConfig,
   createDefaultOperatingConfig
 } from './defaults.js';
+import { createModListFromUrls, isValidModId, getEffectiveModName } from './extensions.js';
 
+/**
+ * Builder pattern interface for server configuration generation
+ * 
+ * Provides a fluent API for step-by-step server configuration creation with validation
+ * and flexible customization. Recommended approach for building server configurations,
+ * especially when dealing with user input or complex configuration scenarios.
+ */
 export interface IServerConfigBuilder {
   // Core server settings
   setBindAddress(address: string): this;
@@ -23,6 +31,13 @@ export interface IServerConfigBuilder {
   setCrossPlatform(enabled: boolean): this;
   setGamePassword(password: string): this;
   setAdminPassword(password: string): this;
+  
+  // Mod configuration
+  setMods(mods: Mod[]): this;
+  addMod(mod: Mod): this;
+  addMods(mods: Mod[]): this;
+  addModsFromUrls(urls: string[]): this;
+  clearMods(): this;
   
   // RCON configuration
   setRconPassword(password: string): this;
@@ -44,6 +59,27 @@ export interface IServerConfigBuilder {
   reset(): this;
 }
 
+/**
+ * Recommended builder for creating Arma Reforger server configurations
+ * 
+ * Provides a fluent, chainable API for step-by-step server configuration creation.
+ * Automatically handles validation, port allocation, and provides sensible defaults.
+ * Ideal for applications that need to build configurations from user input or
+ * require granular control over the configuration process.
+ * 
+ * @example
+ * ```typescript
+ * import { ServerConfigBuilder, OfficialScenarios } from 'reforger-types';
+ * 
+ * const config = new ServerConfigBuilder('My Server', OfficialScenarios.CONFLICT_EVERON)
+ *   .setMaxPlayers(64)
+ *   .setBindPort(2001)
+ *   .setCrossPlatform(true)
+ *   .setRconPassword('admin123')
+ *   .addModsFromUrls(['https://reforger.armaplatform.com/workshop/...'])
+ *   .build();
+ * ```
+ */
 export class ServerConfigBuilder implements IServerConfigBuilder {
   private _bindAddress: string = "0.0.0.0";
   private _bindPort: number = 2001;
@@ -51,15 +87,21 @@ export class ServerConfigBuilder implements IServerConfigBuilder {
   private _publicPort?: number;
   private _serverName: string = "Default Server";
   private _scenarioId: string = "";
-  private _maxPlayers: number = 32;
+  private _maxPlayers: number = 64;
   private _crossPlatform: boolean = false;
   private _gamePassword: string = "";
   private _adminPassword: string = "";
+  private _mods: Mod[] = [];
   private _rconPassword: string = "";
   private _rconAddress?: string;
   private _playerSaveTime: number = 120;
   private _aiLimit: number = -1;
 
+  /**
+   * Creates a new ServerConfigBuilder instance
+   * @param serverName - Initial server display name (optional)
+   * @param scenarioId - Initial scenario configuration path (optional)
+   */
   constructor(serverName?: string, scenarioId?: string) {
     if (serverName) this._serverName = serverName;
     if (scenarioId) this._scenarioId = scenarioId;
@@ -71,6 +113,11 @@ export class ServerConfigBuilder implements IServerConfigBuilder {
     return this;
   }
 
+  /**
+   * Sets the main server port (A2S will use port + 1, RCON will use port + 2)
+   * @param port - Port number (1024-65535)
+   * @returns This builder instance for chaining
+   */
   setBindPort(port: number): this {
     this._bindPort = port;
     return this;
@@ -102,6 +149,11 @@ export class ServerConfigBuilder implements IServerConfigBuilder {
     return this;
   }
 
+  /**
+   * Enables or disables cross-platform play (PC, Xbox, PlayStation)
+   * @param enabled - True for cross-platform, false for PC only
+   * @returns This builder instance for chaining
+   */
   setCrossPlatform(enabled: boolean): this {
     this._crossPlatform = enabled;
     return this;
@@ -114,6 +166,53 @@ export class ServerConfigBuilder implements IServerConfigBuilder {
 
   setAdminPassword(password: string): this {
     this._adminPassword = password;
+    return this;
+  }
+
+  // Mod configuration
+  setMods(mods: Mod[]): this {
+    // Validate mod IDs before setting
+    const validMods = mods.filter(mod => {
+      if (!isValidModId(mod.modId)) {
+        console.warn(`Invalid mod ID: ${mod.modId}. Skipping mod: ${getEffectiveModName(mod)}`);
+        return false;
+      }
+      return true;
+    });
+    this._mods = validMods;
+    return this;
+  }
+
+  addMod(mod: Mod): this {
+    if (!isValidModId(mod.modId)) {
+      console.warn(`Invalid mod ID: ${mod.modId}. Skipping mod: ${getEffectiveModName(mod)}`);
+      return this;
+    }
+    // Check if mod already exists (by modId)
+    const existingIndex = this._mods.findIndex(m => m.modId === mod.modId);
+    if (existingIndex >= 0) {
+      // Replace existing mod
+      this._mods[existingIndex] = mod;
+    } else {
+      // Add new mod
+      this._mods.push(mod);
+    }
+    return this;
+  }
+
+  addMods(mods: Mod[]): this {
+    mods.forEach(mod => this.addMod(mod));
+    return this;
+  }
+
+  addModsFromUrls(urls: string[]): this {
+    const modsFromUrls = createModListFromUrls(urls);
+    this.addMods(modsFromUrls);
+    return this;
+  }
+
+  clearMods(): this {
+    this._mods = [];
     return this;
   }
 
@@ -160,6 +259,7 @@ export class ServerConfigBuilder implements IServerConfigBuilder {
     config.password = this._gamePassword;
     config.passwordAdmin = this._adminPassword;
     config.maxPlayers = this._maxPlayers;
+    config.mods = [...this._mods]; // Copy the mods array
     return config;
   }
 
@@ -170,6 +270,10 @@ export class ServerConfigBuilder implements IServerConfigBuilder {
     return config;
   }
 
+  /**
+   * Builds the complete server configuration from all set options
+   * @returns Complete ServerConfig object ready for JSON serialization
+   */
   build(): ServerConfig {
     const publicAddress = this._publicAddress || this._bindAddress;
     const publicPort = this._publicPort || this._bindPort;
@@ -193,10 +297,11 @@ export class ServerConfigBuilder implements IServerConfigBuilder {
     this._publicPort = undefined;
     this._serverName = "Default Server";
     this._scenarioId = "";
-    this._maxPlayers = 32;
+    this._maxPlayers = 64;
     this._crossPlatform = false;
     this._gamePassword = "";
     this._adminPassword = "";
+    this._mods = [];
     this._rconPassword = "";
     this._rconAddress = undefined;
     this._playerSaveTime = 120;

@@ -1,12 +1,11 @@
 #!/usr/bin/env node
 
-// Example usage of the ServerConfigParser
+// Parser API Example
 import { 
-  parseServerConfig, 
-  validateServerConfig,
+  Parser,
+  parse,
   createDefaultServerConfig,
-  OfficialScenarios,
-  ServerConfigParser 
+  OfficialScenarios
 } from '../dist/index.js';
 
 console.log('🔍 Reforger-Types Parser Example\n');
@@ -15,74 +14,68 @@ console.log('🔍 Reforger-Types Parser Example\n');
 console.log('1. Parsing a valid server configuration...');
 const validConfig = createDefaultServerConfig(
   'Example Server',
-  OfficialScenarios.CONFLICT_EVERON,
+  OfficialScenarios.CONFLICT_EVERON.toString(),
   '0.0.0.0',
   2001,
   true,
   'admin123'
 );
 
-const parseResult = parseServerConfig(validConfig);
+const parseResult = parse(validConfig);
 if (parseResult.success) {
-  console.log('✅ Valid configuration parsed successfully!');
+  console.log('✅ Configuration parsed successfully!');
   console.log(`   Server: ${parseResult.data.game.name}`);
   console.log(`   Port: ${parseResult.data.bindPort}`);
   console.log(`   Max Players: ${parseResult.data.game.maxPlayers}`);
-  console.log(`   Cross-Platform: ${parseResult.data.game.crossPlatform}`);
 } else {
   console.log('❌ Parse failed:', parseResult.errors);
 }
 console.log();
 
-// 2. Parse invalid JSON
-console.log('2. Handling invalid JSON...');
-const invalidJsonResult = parseServerConfig('{ invalid json }');
-if (!invalidJsonResult.success) {
-  console.log('❌ Expected error:', invalidJsonResult.errors[0]);
-}
-console.log();
-
-// 3. Validate incomplete configuration
-console.log('3. Validating incomplete configuration...');
-const incompleteConfig = {
-  bindAddress: '192.168.1.100',
-  // Missing required properties
-};
-
-const validationResult = validateServerConfig(incompleteConfig);
-if (!validationResult.success) {
-  console.log('❌ Validation failed (expected):', validationResult.errors[0]);
-}
-console.log();
-
-// 4. Using parser with custom options
-console.log('4. Using parser with custom options...');
-const strictParser = new ServerConfigParser({
-  strict: true,
-  allowDefaults: false,
-  validateRanges: true
+// 2. Parse with validation
+console.log('2. Parsing with validation enabled...');
+const validationResult = parse(validConfig, { 
+  validate: true,
+  ignore_warnings: ['EMPTY_ADMIN_PASSWORD'] 
 });
 
-const strictResult = strictParser.parseServerConfig(validConfig);
-if (strictResult.success) {
-  console.log('✅ Strict parsing successful');
-} else {
-  console.log('❌ Strict parsing failed:', strictResult.errors);
+if (validationResult.success) {
+  console.log('✅ Configuration is valid!');
+  console.log(`   Warnings: ${validationResult.warnings?.length || 0}`);
+  console.log(`   Errors: ${validationResult.validationErrors?.length || 0}`);
 }
 console.log();
 
-// 5. Parse individual components (placeholder)
-console.log('5. Individual component parsing...');
-const gameConfigResult = strictParser.parseGameConfig({
-  name: 'Component Test',
-  maxPlayers: 32,
-  scenarioId: '{TEST123}Missions/Test.conf',
-  visible: true,
-  crossPlatform: false
+// 3. Using Parser class
+console.log('3. Using Parser class directly...');
+const parser = new Parser();
+const parserResult = parser.parse(validConfig, {
+  validate: true,
+  ignore_warnings: ['WEAK_RCON_PASSWORD', 'EMPTY_ADMIN_PASSWORD']
 });
 
-console.log('✅ Game config parsing result:', gameConfigResult.success ? 'Success' : 'Failed');
+if (parserResult.success) {
+  console.log('✅ Parser class works!');
+  console.log(`   Server Name: ${parserResult.data?.game.name}`);
+  console.log(`   Scenario: ${parserResult.data?.game.scenarioId}`);
+}
+console.log();
+
+// 4. Handle invalid JSON
+console.log('4. Handling invalid JSON...');
+const invalidJsonResult = parse('{ invalid json }');
+console.log(`❌ Expected error: ${invalidJsonResult.errors?.[0] || 'JSON parsing failed'}`);
+console.log();
+
+// 5. Parse from JSON string
+console.log('5. Parsing from JSON string...');
+const jsonString = JSON.stringify(validConfig);
+const jsonResult = parse(jsonString, { validate: true });
+
+if (jsonResult.success) {
+  console.log('✅ JSON parsing successful!');
+  console.log(`   Parsed server: ${jsonResult.data?.game.name}`);
+}
 console.log();
 
 console.log('🎉 Parser example completed!');
-console.log('💡 The parser is ready for extension with more validation logic.');

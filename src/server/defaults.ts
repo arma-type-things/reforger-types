@@ -10,6 +10,10 @@ import {
   SupportedPlatform
 } from './types.js';
 
+/**
+ * Creates default mission header with placeholder values
+ * @returns MissionHeader object with default values
+ */
 export function createDefaultMissionHeader(): MissionHeader {
   return {
     m_sName: "Default Mission",
@@ -18,6 +22,11 @@ export function createDefaultMissionHeader(): MissionHeader {
   };
 }
 
+/**
+ * Creates A2S (Steam Query) configuration
+ * @param basePort - Base port number (A2S will use basePort + 1)
+ * @returns A2S configuration object
+ */
 export function createDefaultA2SConfig(basePort: number): A2SConfig {
   return {
     address: "0.0.0.0",
@@ -25,6 +34,12 @@ export function createDefaultA2SConfig(basePort: number): A2SConfig {
   };
 }
 
+/**
+ * Creates RCON (Remote Console) configuration
+ * @param basePort - Base port number (RCON will use basePort + 2)
+ * @param password - RCON password (minimum 3 characters if provided, empty disables RCON)
+ * @returns RCON configuration object
+ */
 export function createDefaultRconConfig(basePort: number, password: string = ""): RconConfig {
   return {
     address: "127.0.0.1",
@@ -32,10 +47,15 @@ export function createDefaultRconConfig(basePort: number, password: string = "")
     password: password,
     permission: "admin",
     blacklist: [],
-    whitelist: []
+    whitelist: [],
+    maxClients: 16  // Wiki default: 16
   };
 }
 
+/**
+ * Creates default game properties with recommended performance settings
+ * @returns GameProperties object with battle-tested default values
+ */
 export function createDefaultGameProperties(): GameProperties {
   return {
     serverMaxViewDistance: 1600,  // Wiki default: 1600
@@ -51,6 +71,13 @@ export function createDefaultGameProperties(): GameProperties {
   };
 }
 
+/**
+ * Creates game configuration section with server identity and scenario settings
+ * @param name - Server display name
+ * @param scenarioId - Scenario configuration path
+ * @param crossPlatform - Enable cross-platform play (affects supportedPlatforms)
+ * @returns GameConfig object with the specified settings
+ */
 export function createDefaultGameConfig(
   name: string,
   scenarioId: string,
@@ -71,19 +98,58 @@ export function createDefaultGameConfig(
     crossPlatform: crossPlatform,
     supportedPlatforms: supportedPlatforms,
     gameProperties: createDefaultGameProperties(),
-    mods: []
+    mods: [],
+    modsRequiredByDefault: true  // v1.2.1+: boolean, Default: true
   };
 }
 
+/**
+ * Creates operating configuration with server performance and behavior settings
+ * @returns OperatingConfig object with default operational parameters
+ */
 export function createDefaultOperatingConfig(): OperatingConfig {
   return {
     lobbyPlayerSynchronise: true,
     playerSaveTime: 120,
     aiLimit: -1,
-    slotReservationTimeout: 60
+    slotReservationTimeout: 60,
+    disableCrashReporter: false,      // v0.9.8+: boolean, Default: false
+    disableServerShutdown: false,     // v0.9.8+: boolean, Default: false
+    disableAI: false                  // v1.1.0+: boolean, Default: false
+    // disableNavmeshStreaming: undefined by default (v1.2.0+ spec: not provided = no navmesh streaming disabled)
   };
 }
 
+/**
+ * Creates a complete server configuration with sensible defaults for new servers
+ * 
+ * Provides a good basic configuration for brand new servers with the popular Everon Conflict
+ * game mode as default. Automatically handles port allocation (base + 1 for A2S, base + 2 for RCON).
+ * 
+ * For more control and step-by-step configuration, consider using ServerConfigBuilder instead.
+ * 
+ * @param serverName - Display name for the server
+ * @param scenarioId - Scenario configuration path (use OfficialScenarios constants)
+ * @param bindAddress - IP address to bind to (default: "0.0.0.0" for all interfaces)
+ * @param bindPort - Main server port (default: 2001)
+ * @param crossPlatform - Enable cross-platform play (default: false, PC only)
+ * @param rconPassword - RCON password (optional, leave empty to disable RCON)
+ * @returns Complete ServerConfig object ready for JSON serialization
+ * 
+ * @example
+ * ```typescript
+ * import { createDefaultServerConfig, OfficialScenarios } from 'reforger-types';
+ * 
+ * const config = createDefaultServerConfig(
+ *   "My Server",
+ *   OfficialScenarios.CONFLICT_EVERON,
+ *   "0.0.0.0",
+ *   2001,
+ *   true,
+ *   "admin123"
+ * );
+ * ```
+ */
 export function createDefaultServerConfig(
   serverName: string,
   scenarioId: string,

@@ -1,3 +1,5 @@
+import { SlashCommandBuilder, ChatInputCommandInteraction } from 'discord.js';
+
 /**
  * Configuration options for creating a server config
  */
@@ -46,4 +48,12 @@ export interface BotConfig {
   discordToken: string;
   guildId: string;
   configOutputDir: string;
+}
+
+/**
+ * Discord command interface
+ */
+export interface Command {
+  data: SlashCommandBuilder;
+  execute(interaction: ChatInputCommandInteraction): Promise<void>;
 }

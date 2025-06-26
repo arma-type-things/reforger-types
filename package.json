@@ -1,8 +1,8 @@
 {
   "name": "reforger-types",
-  "version": "0.0.1-alpha.3",
+  "version": "0.0.1-beta.1",
   "type": "module",
-  "description": "TypeScript definitions for Arma Reforger server configuration and tooling",
+  "description": "TypeScript definitions and examples for Arma Reforger server configuration and tooling",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -26,9 +26,10 @@
     "prebuild": "npm run clean",
     "prepublishOnly": "npm run build",
     "dev": "tsc --watch",
-    "test": "npm run test:node && npm run test:bun",
+    "test": "npm run test:node && npm run test:bun && npm run test:integration",
     "test:bun": "bun test test/*.bun.test.ts",
-    "test:node": "node --test test/*.node.test.js"
+    "test:node": "node --test test/*.node.test.js",
+    "test:integration": "node test/integration/run-all.js"
   },
   "keywords": [
     "arma",
@@ -41,9 +42,10 @@
   "author": "tsal <tsalaroth@gmail.com>",
   "license": "LGPL-3.0-only",
   "devDependencies": {
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "@types/node": "^24.0.4"
   },
   "engines": {
-    "node": ">=16"
+    "node": ">=22"
   }
 }

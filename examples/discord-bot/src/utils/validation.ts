@@ -1,4 +1,5 @@
 import { BotConfig } from '../types';
+import { parse } from 'reforger-types';
 
 /**
  * Load and validate environment configuration
@@ -24,7 +25,7 @@ export function loadConfig(): BotConfig {
 }
 
 /**
- * Validate server configuration options
+ * Validate server configuration options using the library's validation
  */
 export function validateServerOptions(options: any): string[] {
   const errors: string[] = [];
@@ -34,39 +35,64 @@ export function validateServerOptions(options: any): string[] {
     errors.push('Scenario ID is required and must be a string');
   }
 
-  // Validate numeric ranges
-  if (options.maxPlayers !== undefined) {
-    const maxPlayers = Number(options.maxPlayers);
-    if (isNaN(maxPlayers) || maxPlayers < 1 || maxPlayers > 128) {
-      errors.push('Max players must be between 1 and 128');
+  // Create a minimal config for validation
+  const testConfig = {
+    bindAddress: '0.0.0.0',
+    bindPort: options.bindPort || 2001,
+    publicAddress: '0.0.0.0',
+    publicPort: options.bindPort || 2001,
+    a2s: { address: '0.0.0.0', port: (options.bindPort || 2001) + 1 },
+    rcon: { 
+      address: '127.0.0.1', 
+      port: (options.bindPort || 2001) + 2, 
+      password: '', 
+      permission: 'admin', 
+      blacklist: [], 
+      whitelist: [] 
+    },
+    game: {
+      name: 'Test Server',
+      password: '',
+      passwordAdmin: '',
+      admins: [],
+      scenarioId: options.scenario || 'test',
+      maxPlayers: options.maxPlayers || 64,
+      visible: true,
+      crossPlatform: false,
+      supportedPlatforms: ['PLATFORM_PC'],
+      gameProperties: {
+        serverMaxViewDistance: options.serverMaxViewDistance || 1600,
+        serverMinGrassDistance: options.serverMinGrassDistance || 0,
+        networkViewDistance: options.networkViewDistance || 1500,
+        disableThirdPerson: false,
+        fastValidation: true,
+        battlEye: true,
+        VONDisableUI: false,
+        VONDisableDirectSpeechUI: false,
+        VONCanTransmitCrossFaction: false,
+        missionHeader: { m_sName: 'Test', m_sAuthor: 'Test', m_sSaveFileName: 'test' }
+      },
+      mods: [],
+      modsRequiredByDefault: true
+    },
+    operating: {
+      lobbyPlayerSynchronise: true,
+      playerSaveTime: 120,
+      aiLimit: -1,
+      slotReservationTimeout: 60,
+      disableCrashReporter: false,
+      disableServerShutdown: false,
+      disableAI: false
     }
-  }
+  };
 
-  if (options.bindPort !== undefined) {
-    const bindPort = Number(options.bindPort);
-    if (isNaN(bindPort) || bindPort < 1024 || bindPort > 65535) {
-      errors.push('Bind port must be between 1024 and 65535');
-    }
-  }
-
-  if (options.serverMaxViewDistance !== undefined) {
-    const distance = Number(options.serverMaxViewDistance);
-    if (isNaN(distance) || distance < 500 || distance > 10000) {
-      errors.push('Server max view distance must be between 500 and 10000');
-    }
-  }
-
-  if (options.networkViewDistance !== undefined) {
-    const distance = Number(options.networkViewDistance);
-    if (isNaN(distance) || distance < 500 || distance > 5000) {
-      errors.push('Network view distance must be between 500 and 5000');
-    }
-  }
-
-  if (options.serverMinGrassDistance !== undefined) {
-    const distance = Number(options.serverMinGrassDistance);
-    if (isNaN(distance) || (distance !== 0 && (distance < 50 || distance > 150))) {
-      errors.push('Server min grass distance must be 0 or between 50 and 150');
+  // Use the library's validation
+  const result = parse(testConfig, { validate: true });
+  
+  if (!result.success) {
+    errors.push(...result.errors);
+    if (result.validationErrors) {
+      errors.push(...result.validationErrors.map(e => e.message));
     }
   }
 

@@ -1,0 +1,59 @@
+{
+  "bindAddress": "0.0.0.0",
+  "bindPort": 2001,
+  "publicAddress": "123.456.789.10",
+  "publicPort": 2001,
+  "a2s": {
+    "address": "0.0.0.0",
+    "port": 2002
+  },
+  "rcon": {
+    "address": "127.0.0.1",
+    "port": 2003,
+    "password": "",
+    "permission": "admin",
+    "blacklist": [],
+    "whitelist": [],
+    "maxClients": 16
+  },
+  "game": {
+    "name": "My Reforger Server",
+    "password": "",
+    "passwordAdmin": "",
+    "admins": [],
+    "scenarioId": "{ECC61978EDCC2B5A}Missions/23_Campaign.conf",
+    "maxPlayers": 64,
+    "visible": true,
+    "crossPlatform": false,
+    "supportedPlatforms": [
+      "PLATFORM_PC"
+    ],
+    "gameProperties": {
+      "serverMaxViewDistance": 1600,
+      "serverMinGrassDistance": 0,
+      "networkViewDistance": 1500,
+      "disableThirdPerson": false,
+      "fastValidation": true,
+      "battlEye": true,
+      "VONDisableUI": false,
+      "VONDisableDirectSpeechUI": false,
+      "VONCanTransmitCrossFaction": false,
+      "missionHeader": {
+        "m_sName": "Default Mission",
+        "m_sAuthor": "Default Author",
+        "m_sSaveFileName": "defaultSave"
+      }
+    },
+    "mods": [],
+    "modsRequiredByDefault": true
+  },
+  "operating": {
+    "lobbyPlayerSynchronise": true,
+    "playerSaveTime": 120,
+    "aiLimit": -1,
+    "slotReservationTimeout": 60,
+    "disableCrashReporter": false,
+    "disableServerShutdown": false,
+    "disableAI": false
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "bindAddress": "0.0.0.0",
+  "bindPort": 65000,
+  "publicAddress": "",
+  "publicPort": 2001,
+  "a2s": {
+    "address": "",
+    "port": 17865
+  },
+  "rcon": {
+    "address": "",
+    "port": 19999,
+    "password": "weak",
+    "maxClients": 50
+  },
+  "game": {
+    "name": "",
+    "password": "",
+    "scenarioId": "{ECC61978EDCC2B5A}Missions/23_Campaign.conf",
+    "playerCountLimit": 150,
+    "visible": true,
+    "crossPlatform": true,
+    "supportedPlatforms": ["PLATFORM_PC", "PLATFORM_XBL", "PLATFORM_PSN"],
+    "gameProperties": {
+      "serverMaxViewDistance": 8000,
+      "serverMinGrassDistance": 5,
+      "networkViewDistance": 3000,
+      "disableThirdPerson": false,
+      "fastValidation": true,
+      "battlEye": false,
+      "VONDisableUI": false,
+      "VONDisableDirectSpeechUI": false,
+      "VONCanTransmitCrossFaction": true,
+      "missionHeader": {
+        "m_sName": "Conflict",
+        "m_sAuthor": "Bohemia Interactive",
+        "m_sDescription": "Conflict on Everon"
+      }
+    },
+    "mods": [],
+    "modsRequiredByDefault": true
+  },
+  "operating": {
+    "lobbyPlayerSynchronise": true,
+    "playerSaveTime": 60,
+    "AILimit": 500,
+    "disableCrashReporter": false,
+    "disableServerShutdown": false,
+    "disableAI": false,
+    "disableNavmeshStreaming": false,
+    "joinQueue": {
+      "maxSize": 100
+    }
+  }
+}

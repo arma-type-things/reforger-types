@@ -1,150 +1,119 @@
 // Parser tests
 import { test, expect, describe } from "bun:test";
 import { 
-  ServerConfigParser,
-  parseServerConfig,
-  validateServerConfig,
+  Parser,
+  parse,
   createDefaultServerConfig,
   OfficialScenarios
 } from '../src/index.js';
 
-describe('ServerConfigParser', () => {
-  test('should create parser with default options', () => {
-    const parser = new ServerConfigParser();
-    expect(parser).toBeInstanceOf(ServerConfigParser);
+describe('Parser Class', () => {
+  test('should create parser instance', () => {
+    const parser = new Parser();
+    expect(parser).toBeInstanceOf(Parser);
   });
 
-  test('should create parser with custom options', () => {
-    const parser = new ServerConfigParser({
-      strict: true,
-      allowDefaults: false,
-      validateRanges: true
-    });
-    expect(parser).toBeInstanceOf(ServerConfigParser);
-  });
-});
-
-describe('Basic Parsing', () => {
   test('should parse valid server config object', () => {
-    const validConfig = createDefaultServerConfig('Test Server', OfficialScenarios.CONFLICT_EVERON);
+    const parser = new Parser();
+    const config = createDefaultServerConfig('Test Server', OfficialScenarios.CONFLICT_EVERON.toString());
     
-    const result = parseServerConfig(validConfig);
-    
+    const result = parser.parse(config);
     expect(result.success).toBe(true);
     expect(result.data).toBeDefined();
-    expect(result.errors).toHaveLength(0);
     expect(result.data?.game.name).toBe('Test Server');
   });
 
-  test('should parse valid server config JSON string', () => {
-    const validConfig = createDefaultServerConfig('JSON Test', OfficialScenarios.CAH_CASTLE);
-    const jsonString = JSON.stringify(validConfig);
+  test('should parse JSON string', () => {
+    const parser = new Parser();
+    const config = createDefaultServerConfig('JSON Test', OfficialScenarios.CAH_CASTLE.toString());
+    const jsonString = JSON.stringify(config);
     
-    const result = parseServerConfig(jsonString);
-    
+    const result = parser.parse(jsonString);
     expect(result.success).toBe(true);
-    expect(result.data).toBeDefined();
-    expect(result.errors).toHaveLength(0);
     expect(result.data?.game.name).toBe('JSON Test');
   });
 
-  test('should handle invalid JSON string', () => {
-    const invalidJson = '{ invalid json }';
+  test('should handle invalid JSON', () => {
+    const parser = new Parser();
     
-    const result = parseServerConfig(invalidJson);
-    
-    expect(result.success).toBe(false);
-    expect(result.data).toBeUndefined();
-    expect(result.errors.length).toBeGreaterThan(0);
-    expect(result.errors[0]).toContain('JSON parsing failed');
-  });
-
-  test('should handle missing required properties', () => {
-    const incompleteConfig = {
-      bindAddress: '0.0.0.0',
-      // Missing other required properties
-    };
-    
-    const result = parseServerConfig(incompleteConfig);
-    
+    const result = parser.parse('{ invalid json }');
     expect(result.success).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
-    expect(result.errors[0]).toContain('Invalid server configuration structure');
   });
-});
 
-describe('Validation Functions', () => {
-  test('should validate correct server config', () => {
-    const validConfig = createDefaultServerConfig('Valid Server', OfficialScenarios.TUTORIAL);
+  test('should validate when option is enabled', () => {
+    const parser = new Parser();
+    const config = createDefaultServerConfig('Validation Test', OfficialScenarios.TUTORIAL.toString());
     
-    const result = validateServerConfig(validConfig);
-    
+    const result = parser.parse(config, { validate: true });
     expect(result.success).toBe(true);
-    expect(result.data).toBeDefined();
-    expect(result.errors).toHaveLength(0);
   });
 
-  test('should reject invalid config structure', () => {
-    const invalidConfig = { notAValidConfig: true };
+  test('should ignore specified warnings', () => {
+    const parser = new Parser();
+    const config = createDefaultServerConfig('Warning Test', OfficialScenarios.COMBAT_OPS_ARLAND.toString());
     
-    const result = validateServerConfig(invalidConfig);
-    
-    expect(result.success).toBe(false);
-    expect(result.data).toBeUndefined();
-    expect(result.errors.length).toBeGreaterThan(0);
-  });
-
-  test('should handle null/undefined input', () => {
-    expect(validateServerConfig(null).success).toBe(false);
-    expect(validateServerConfig(undefined).success).toBe(false);
-    expect(validateServerConfig('not an object').success).toBe(false);
-  });
-});
-
-describe('Convenience Functions', () => {
-  test('parseServerConfig should work as standalone function', () => {
-    const config = createDefaultServerConfig('Standalone Test', OfficialScenarios.GAME_MASTER_EVERON);
-    
-    const result = parseServerConfig(config);
-    
-    expect(result.success).toBe(true);
-    expect(result.data?.game.name).toBe('Standalone Test');
-  });
-
-  test('should accept parser options in convenience functions', () => {
-    const config = createDefaultServerConfig('Options Test', OfficialScenarios.COMBAT_OPS_ARLAND);
-    
-    const result = parseServerConfig(config, { 
-      strict: true, 
-      validateRanges: false 
+    const result = parser.parse(config, {
+      validate: true,
+      ignore_warnings: ['EMPTY_ADMIN_PASSWORD']
     });
     
     expect(result.success).toBe(true);
   });
-});
 
-describe('Future Parser Features (Placeholders)', () => {
-  test('should have parseGameConfig method', () => {
-    const parser = new ServerConfigParser();
-    expect(typeof parser.parseGameConfig).toBe('function');
-  });
-
-  test('should have parseGameProperties method', () => {
-    const parser = new ServerConfigParser();
-    expect(typeof parser.parseGameProperties).toBe('function');
-  });
-
-  test('parseGameConfig should handle basic input', () => {
-    const parser = new ServerConfigParser();
-    const gameConfig = {
-      name: 'Test Game',
-      maxPlayers: 32,
-      scenarioId: 'test-scenario'
-    };
+  test('should handle null input', () => {
+    const parser = new Parser();
     
-    const result = parser.parseGameConfig(gameConfig);
-    // For now, just test that it doesn't crash
-    expect(result).toBeDefined();
-    expect(typeof result.success).toBe('boolean');
+    const result = parser.parse(null);
+    expect(result.success).toBe(false);
   });
 });
+
+describe('Parse Function', () => {
+  test('should parse server config', () => {
+    const config = createDefaultServerConfig('Parse Test', OfficialScenarios.GAME_MASTER_EVERON.toString());
+    
+    const result = parse(config);
+    expect(result.success).toBe(true);
+    expect(result.data?.game.name).toBe('Parse Test');
+  });
+
+  test('should accept validation options', () => {
+    const config = createDefaultServerConfig('Options Test', OfficialScenarios.CONFLICT_EVERON.toString());
+    
+    const result = parse(config, {
+      validate: true,
+      ignore_warnings: ['EMPTY_ADMIN_PASSWORD']
+    });
+    
+    expect(result.success).toBe(true);
+  });
+
+  test('should handle invalid data', () => {
+    const result = parse({ invalid: 'data' });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('Parser Business Logic', () => {
+  test('should preserve configuration data', () => {
+    const originalConfig = createDefaultServerConfig('Data Test', OfficialScenarios.TUTORIAL.toString());
+    
+    const result = parse(originalConfig);
+    expect(result.success).toBe(true);
+    expect(result.data?.game.name).toBe(originalConfig.game.name);
+    expect(result.data?.bindPort).toBe(originalConfig.bindPort);
+  });
+
+  test('should handle configuration with mods', () => {
+    const config = createDefaultServerConfig('Mod Test', OfficialScenarios.CONFLICT_EVERON.toString());
+    config.game.mods = [
+      { modId: '123456789', name: 'Test Mod' }
+    ];
+    
+    const result = parse(config);
+    expect(result.success).toBe(true);
+    expect(result.data?.game.mods).toBeDefined();
+  });
+});
+

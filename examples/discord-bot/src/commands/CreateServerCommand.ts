@@ -4,12 +4,12 @@ import {
   ChatInputCommandInteraction
 } from 'discord.js';
 import { ServerConfigService } from '../services/ServerConfigService';
-import { ServerConfigOptions } from '../types';
+import { ServerConfigOptions, Command } from '../types';
 
 /**
  * Discord slash command for creating server configurations
  */
-export class CreateServerCommand {
+export class CreateServerCommand implements Command {
   public readonly data: SlashCommandBuilder;
 
   constructor(private configService: ServerConfigService) {
