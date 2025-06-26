@@ -202,7 +202,7 @@ export class LayoutManager {
       borderColor: 'brandColor',
       textAlign: 'center',
       title: 'REDSMITH',
-      titleAlignment: 'right'
+      titleAlignment: 'left'
     };
     
     const mergedConfig = { ...defaultConfig, ...config };
@@ -251,6 +251,38 @@ export class LayoutManager {
     
     const mergedConfig = { ...defaultConfig, ...config };
     this.printMixedBox([{ text: '❌ ' + message, colorKey: 'errorColor' }], mergedConfig);
+  }
+
+  /**
+   * Print an error banner with configurable title and content inside the banner
+   */
+  printErrorBanner(content: string, title?: string, config: BoxConfig = {}): void {
+    const defaultConfig: BoxConfig = {
+      padding: 1,
+      borderStyle: 'bold',
+      borderColor: 'errorColor',
+      width: 80,
+      ...(title && { title: title, titleAlignment: 'left' })
+    };
+    
+    const mergedConfig = { ...defaultConfig, ...config };
+    this.printMixedBox([{ text: content, colorKey: 'errorColor' }], mergedConfig);
+  }
+
+  /**
+   * Print a warning banner with configurable title and content inside the banner
+   */
+  printWarningBanner(content: string, title?: string, config: BoxConfig = {}): void {
+    const defaultConfig: BoxConfig = {
+      padding: 1,
+      borderStyle: 'bold',
+      borderColor: 'valueColor',
+      width: 80,
+      ...(title && { title: title, titleAlignment: 'left' })
+    };
+    
+    const mergedConfig = { ...defaultConfig, ...config };
+    this.printMixedBox([{ text: content, colorKey: 'valueColor' }], mergedConfig);
   }
 
   /**

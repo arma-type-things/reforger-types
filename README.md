@@ -11,9 +11,9 @@ npm install reforger-types
 ## Examples
 
 See the [examples folder](./examples) for complete implementations:
+- **[Redsmith](./examples/redsmith/)** - Interactive wizard and validation tool for server configs (also available via `npx redsmith`)
 - **[Discord Bot](./examples/discord-bot/)** - Slash commands for server configuration  
-- **[Config Validator](./examples/config-validator/)** - CLI validation tool
-- **[Redsmith](./examples/redsmith/)** - Interactive wizard for server configuration (also available via `npx redsmith`)
+- **[Config Validator](./examples/config-validator/)** - Focused example demonstrating direct validation API usage
 - **[Parser Example](./examples/parser-example.js)** - Configuration parsing and validation
 - **[Mod Extensions Example](./examples/mod-extensions-example.js)** - Workshop URL and mod utilities
 
@@ -70,6 +70,21 @@ const customResult = parse(configObject, {
   validate: true,
   ignore_warnings: ['EMPTY_ADMIN_PASSWORD', 'WEAK_RCON_PASSWORD']
 });
+```
+
+### CLI Validation
+
+For quick config validation from the command line:
+
+```bash
+# Install redsmith globally
+npm install -g redsmith
+
+# Validate any config file
+redsmith validate path/to/server.json
+
+# With debug output
+redsmith validate path/to/server.json --debug
 ```
 
 ## API Documentation
