@@ -16,6 +16,7 @@ See the [examples folder](./examples) for complete implementations:
 - **[Config Validator](./examples/config-validator/)** - Focused example demonstrating direct validation API usage
 - **[Parser Example](./examples/parser-example.js)** - Configuration parsing and validation
 - **[Mod Extensions Example](./examples/mod-extensions-example.js)** - Workshop URL and mod utilities
+- **[Mod Conversion Example](./examples/mod-conversion-example.js)** - URL-to-mod conversion and extended mod utilities
 
 ## Quick Start
 
