@@ -7,6 +7,7 @@ import {
   type MissionHeader
 } from 'reforger-types';
 import { LayoutManager } from './layout.js';
+import { ConfigValidator } from './validator.js';
 import { 
   type RedsmithConfig, 
   type WizardStep,
@@ -96,11 +97,11 @@ export class RedsmithWizard {
     return serverConfig;
   }
 
-  private async saveConfig(config: ServerConfig, outputPath: string): Promise<void> {
-    // Check if file already exists - never overwrite by default
+  private async saveConfig(config: ServerConfig, outputPath: string, force: boolean = false): Promise<void> {
+    // Check if file already exists - only block if force is not enabled
     const fileExists = fs.existsSync(outputPath);
-    if (fileExists) {
-      throw new Error(`File already exists: ${outputPath}. Cannot overwrite existing files.`);
+    if (fileExists && !force) {
+      throw new Error(`Refusing to overwrite existing file: ${outputPath} (use --force to override)`);
     }
     
     const configJson = JSON.stringify(config, null, 2);
@@ -147,13 +148,38 @@ export class RedsmithWizard {
     this.layout.printLine();
   }
 
+  private async validateConfig(configPath: string): Promise<void> {
+    this.layout.printLine();
+    this.layout.printSectionHeader('🔍 Validation Results');
+    
+    try {
+      const validator = new ConfigValidator();
+      const result = await validator.validateFile(configPath);
+      validator.displayResults(result, configPath);
+      
+      // If there are errors, exit with error code
+      if (result.hasErrors) {
+        process.exit(1);
+      }
+    } catch (error) {
+      this.layout.printError('Validation failed: ' + String(error));
+      process.exit(1);
+    }
+  }
+
   private async handleConfirmationResult(confirm: { proceed?: boolean }, config: ServerConfig): Promise<void> {
     if (confirm.proceed === undefined) {
       process.exit(0); // User cancelled (Ctrl+C)
     }
 
     if (confirm.proceed) {
-      await this.saveConfig(config, this.config.outputPath!);
+      await this.saveConfig(config, this.config.outputPath!, this.config.force || false);
+      
+      // Run validation if requested
+      if (this.config.validate) {
+        await this.validateConfig(this.config.outputPath!);
+      }
+      
       this.layout.printSuccessBox('🎉 Server configuration forged successfully by Redsmith!');
     } else {
       this.layout.print('\n❌ Configuration not forged.', 'errorColor');
@@ -172,8 +198,8 @@ export class RedsmithWizard {
       
       let confirm: { proceed?: boolean };
       
-      if (this.config.yes) {
-        // Skip confirmation when --yes flag is set
+      if (this.config.yes || this.config.force || this.config.validate) {
+        // Skip confirmation when --yes, --force, or --validate flag is set
         confirm = { proceed: true };
       } else {
         // Normal confirmation flow

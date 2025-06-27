@@ -1,6 +1,34 @@
 # Redsmith
 
-An interactive forge for crafting Arma Reforger server configuration files.
+An interactive forge for crafting Arm- `--scenario <scenario>` - Scenario name (see supported scenarios below)
+- `--mission-name <n>` - Mission name
+- `--mission-author <author>` - Mission author
+- `--save-file <filename>` - Save file name
+- `--mods <mods>` - Comma-separated list of mod IDs (16-character hex strings)
+- `--output <path>` - Output file path
+- `--yes` - Skip confirmation prompt and proceed automatically
+- `--force` - Allow overwriting existing files and skip confirmation
+- `--validate` - Run validation after saving the configuration file
+
+### Non-Interactive Mode
+
+Use `--yes` for automated scripting:
+
+```bash
+node dist/index.js --name "Auto Server" --scenario conflict-everon --port 2001 --output server.json --yes
+```
+
+Use `--force` to overwrite existing files:
+
+```bash
+node dist/index.js --output existing-file.json --force --yes
+```
+
+Use `--validate` to immediately validate the generated configuration:
+
+```bash
+node dist/index.js --name "Test Server" --scenario conflict-everon --port 2001 --validate
+```rger server configuration files.
 
 *Redsmith* - a portmanteau of "Reforger" and "blacksmith" - helps you forge perfect server configurations through an intuitive command-line interface.
 
@@ -53,6 +81,37 @@ Available options:
 - `--save-file <filename>` - Save file name
 - `--mods <mods>` - Comma-separated list of mod IDs (16-character hex strings)
 - `--output <path>` - Output file path
+- `--yes` - Skip confirmation prompt and proceed automatically
+- `--force` - Allow overwriting existing files and skip confirmation
+- `--validate` - Run validation after saving the configuration file
+
+### Non-Interactive Mode
+
+Use `--yes` for automated scripting:
+
+```bash
+node dist/index.js --name "Auto Server" --scenario conflict-everon --port 2001 --output server.json --yes
+```
+
+Use `--force` to overwrite existing files:
+
+```bash
+node dist/index.js --output existing-file.json --force --yes
+```
+
+Use `--validate` to immediately validate the generated configuration:
+
+```bash
+node dist/index.js --name "Test Server" --scenario conflict-everon --port 2001 --validate
+```
+
+### Discovering Available Scenarios
+
+Use the `list-scenarios` command to see all supported scenario codes:
+
+```bash
+node dist/index.js list-scenarios
+```
 
 ### Mod Support
 

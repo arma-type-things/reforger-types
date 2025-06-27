@@ -20,6 +20,8 @@ interface CliOptions {
   saveFile?: string;
   mods?: string;
   yes?: boolean;
+  force?: boolean;
+  validate?: boolean;
 }
 
 // Scenario name mapping
@@ -69,6 +71,41 @@ function parseModIds(modsString?: string): Mod[] {
   return validMods;
 }
 
+// List available scenarios
+function listScenarios(): void {
+  const layout = new LayoutManager();
+  
+  layout.printBrandedBanner('Available Scenarios');
+  layout.printLine();
+  layout.printMixed({ text: '  Use these scenario codes with the --scenario option:', colorKey: 'dimColor' });
+  layout.printLine();
+
+  const scenarioMap: Array<{ code: string; name: string }> = [
+    { code: 'conflict-everon', name: 'Conflict Everon' },
+    { code: 'conflict-northern-everon', name: 'Conflict Northern Everon' },
+    { code: 'conflict-southern-everon', name: 'Conflict Southern Everon' },
+    { code: 'conflict-western-everon', name: 'Conflict Western Everon' },
+    { code: 'conflict-montignac', name: 'Conflict Montignac' },
+    { code: 'conflict-arland', name: 'Conflict Arland' },
+    { code: 'combat-ops-arland', name: 'Combat Ops Arland' },
+    { code: 'combat-ops-everon', name: 'Combat Ops Everon' },
+    { code: 'game-master-everon', name: 'Game Master Everon' },
+    { code: 'game-master-arland', name: 'Game Master Arland' }
+  ];
+
+  for (const scenario of scenarioMap) {
+    layout.printMixed(
+      { text: `  ${scenario.code.padEnd(28)}`, colorKey: 'bodyColor' },
+      { text: scenario.name, colorKey: 'valueColor' }
+    );
+  }
+
+  layout.printLine();
+  layout.printMixed({ text: '  Example: ', colorKey: 'dimColor' });
+  layout.printMixed({ text: 'redsmith --scenario conflict-everon', colorKey: 'bodyColor' });
+  layout.printLine();
+}
+
 // Convert CLI options to RedsmithConfig
 function cliToConfig(options: CliOptions): RedsmithConfig {
   return {
@@ -82,7 +119,9 @@ function cliToConfig(options: CliOptions): RedsmithConfig {
     saveFileName: options.saveFile,
     outputPath: options.output,
     mods: parseModIds(options.mods),
-    yes: options.yes
+    yes: options.yes,
+    force: options.force,
+    validate: options.validate
   };
 }
 
@@ -137,6 +176,8 @@ function setupCli(): void {
     .option('--save-file <filename>', 'save file name')
     .option('--mods <mods>', 'comma-separated list of mod IDs (16-character hex strings)')
     .option('-y, --yes', 'skip confirmation prompt and proceed automatically')
+    .option('-f, --force', 'allow overwriting existing files and skip confirmation')
+    .option('--validate', 'run validation after saving the configuration file')
     .action(async (options) => {
       await runWizard(options);
     });
@@ -149,6 +190,14 @@ function setupCli(): void {
     .option('-d, --debug', 'Enable debug output')
     .action(async (configFile: string, options: { debug?: boolean }) => {
       await runValidator(configFile, options);
+    });
+
+  // List scenarios sub-command
+  program
+    .command('list-scenarios')
+    .description('List all available scenario codes and names')
+    .action(() => {
+      listScenarios();
     });
 
   program.parse();

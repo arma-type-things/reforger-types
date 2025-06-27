@@ -16,6 +16,8 @@ export interface RedsmithConfig {
   outputPath?: string;
   mods?: Mod[];
   yes?: boolean;
+  force?: boolean;
+  validate?: boolean;
 }
 
 // Interface for wizard steps
