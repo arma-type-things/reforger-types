@@ -23,6 +23,7 @@ interface CliOptions {
   yes?: boolean;
   force?: boolean;
   validate?: boolean;
+  stdout?: boolean; // true if -- was detected
 }
 
 // Scenario name mapping
@@ -123,13 +124,20 @@ function cliToConfig(options: CliOptions): RedsmithConfig {
     crossPlatform: options.crossPlatform,
     yes: options.yes,
     force: options.force,
-    validate: options.validate
+    validate: options.validate,
+    stdout: options.stdout
   };
 }
 
 // Wizard command handler
 async function runWizard(options: CliOptions): Promise<void> {
   try {
+    // Check if -- is the last argument for stdout mode
+    const args = process.argv;
+    if (args[args.length - 1] === '--') {
+      options.stdout = true;
+    }
+    
     const initialConfig = cliToConfig(options);
     const wizard = new RedsmithWizard(initialConfig);
     await wizard.run();

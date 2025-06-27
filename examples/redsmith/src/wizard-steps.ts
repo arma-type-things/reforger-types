@@ -19,6 +19,7 @@ export interface RedsmithConfig {
   yes?: boolean;
   force?: boolean;
   validate?: boolean;
+  stdout?: boolean;
 }
 
 // Interface for wizard steps
@@ -141,30 +142,52 @@ export abstract class BaseWizardStep implements WizardStep {
     return response.value?.trim() || defaultValue;
   }
 
-  protected async promptNumber(question: string, defaultValue: number, min?: number, max?: number): Promise<number> {
+  protected async promptNumber(
+    question: string, 
+    defaultValue: number, 
+    min?: number, 
+    max?: number
+  ): Promise<number> {
+    // Use text input instead of number to handle default values properly
     const response = await prompts({
-      type: 'number',
+      type: 'text',
       name: 'value',
       message: question,
-      initial: defaultValue,
-      min,
-      max,
-      validate: (value: number) => {
-        if (min !== undefined && value < min) {
+      initial: defaultValue.toString(),
+      validate: (value: string) => {
+        // If empty string, user hit enter - this is valid (will use default)
+        if (value.trim() === '') {
+          return true;
+        }
+        
+        // Parse the entered value
+        const numValue = parseInt(value.trim(), 10);
+        if (isNaN(numValue)) {
+          return 'Please enter a valid number';
+        }
+        
+        if (min !== undefined && numValue < min) {
           return `Value must be at least ${min}`;
         }
-        if (max !== undefined && value > max) {
+        if (max !== undefined && numValue > max) {
           return `Value must be at most ${max}`;
         }
         return true;
       }
     });
     
+    // Handle cancellation (Ctrl+C)
     if (response.value === undefined) {
-      process.exit(0); // User cancelled (Ctrl+C)
+      process.exit(0);
     }
     
-    return response.value ?? defaultValue;
+    // If empty string (user hit enter), use default value
+    if (response.value.trim() === '') {
+      return defaultValue;
+    }
+    
+    // Parse and return the entered value
+    return parseInt(response.value.trim(), 10);
   }
 
   protected async promptChoice(question: string, options: string[], defaultIndex: number = 0): Promise<number> {
@@ -313,7 +336,8 @@ export class OutputStep extends BaseWizardStep {
   constructor() { super('Output Configuration'); }
 
   isRequired(config: RedsmithConfig): boolean {
-    return !config.outputPath;
+    // Skip if stdout mode is enabled or if outputPath is already provided
+    return !config.outputPath && !config.stdout;
   }
 
   async execute(config: RedsmithConfig, layout: LayoutManager): Promise<void> {

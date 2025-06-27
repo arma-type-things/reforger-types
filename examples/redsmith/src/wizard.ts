@@ -123,7 +123,12 @@ export class RedsmithWizard {
     }
   }
 
-  private displaySummary(config: ServerConfig, outputPath: string): void {
+  private outputToStdout(config: ServerConfig): void {
+    const configJson = JSON.stringify(config, null, 2);
+    console.log(configJson);
+  }
+
+  private displaySummary(config: ServerConfig, outputPath?: string): void {
     this.layout.printLine();
     this.layout.printSectionHeader('Configuration Summary');
     this.layout.printLine();
@@ -147,7 +152,11 @@ export class RedsmithWizard {
       this.layout.printLabelValue('Save File: ', String(config.game.gameProperties.missionHeader.m_sSaveFileName));
     }
     
-    this.layout.printLabelValue('Output Path: ', path.resolve(outputPath));
+    if (outputPath) {
+      this.layout.printLabelValue('Output Path: ', path.resolve(outputPath));
+    } else {
+      this.layout.printLabelValue('Output: ', 'stdout');
+    }
     this.layout.printLine();
   }
 
@@ -176,14 +185,20 @@ export class RedsmithWizard {
     }
 
     if (confirm.proceed) {
-      await this.saveConfig(config, this.config.outputPath!, this.config.force || false);
-      
-      // Run validation if requested
-      if (this.config.validate) {
-        await this.validateConfig(this.config.outputPath!);
+      if (this.config.stdout) {
+        // Output to stdout instead of file
+        this.outputToStdout(config);
+      } else {
+        // Normal file output
+        await this.saveConfig(config, this.config.outputPath!, this.config.force || false);
+        
+        // Run validation if requested (only for file output)
+        if (this.config.validate) {
+          await this.validateConfig(this.config.outputPath!);
+        }
+        
+        this.layout.printSuccessBox('🎉 Server configuration forged successfully by Redsmith!');
       }
-      
-      this.layout.printSuccessBox('🎉 Server configuration forged successfully by Redsmith!');
     } else {
       this.layout.print('\n❌ Configuration not forged.', 'errorColor');
     }
@@ -197,7 +212,7 @@ export class RedsmithWizard {
 
       const config = await this.generateConfig();
       
-      this.displaySummary(config, this.config.outputPath!);
+      this.displaySummary(config, this.config.stdout ? undefined : this.config.outputPath!);
       
       let confirm: { proceed?: boolean };
       
