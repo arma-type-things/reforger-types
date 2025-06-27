@@ -19,6 +19,7 @@ interface CliOptions {
   missionAuthor?: string;
   saveFile?: string;
   mods?: string;
+  yes?: boolean;
 }
 
 // Scenario name mapping
@@ -80,7 +81,8 @@ function cliToConfig(options: CliOptions): RedsmithConfig {
     missionAuthor: options.missionAuthor,
     saveFileName: options.saveFile,
     outputPath: options.output,
-    mods: parseModIds(options.mods)
+    mods: parseModIds(options.mods),
+    yes: options.yes
   };
 }
 
@@ -134,6 +136,7 @@ function setupCli(): void {
     .option('--mission-author <author>', 'mission author')
     .option('--save-file <filename>', 'save file name')
     .option('--mods <mods>', 'comma-separated list of mod IDs (16-character hex strings)')
+    .option('-y, --yes', 'skip confirmation prompt and proceed automatically')
     .action(async (options) => {
       await runWizard(options);
     });

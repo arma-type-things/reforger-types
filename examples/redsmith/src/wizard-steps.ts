@@ -15,6 +15,7 @@ export interface RedsmithConfig {
   saveFileName?: string;
   outputPath?: string;
   mods?: Mod[];
+  yes?: boolean;
 }
 
 // Interface for wizard steps

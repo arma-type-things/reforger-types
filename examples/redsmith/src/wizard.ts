@@ -31,7 +31,7 @@ export class RedsmithWizard {
       new ServerNameStep(),
       new NetworkStep(),
       new ScenarioStep(),
-      new MissionHeaderStep(),
+      // new MissionHeaderStep(), // Disabled for now - mission header fields are optional
       new OutputStep()
     ];
   }
@@ -80,18 +80,29 @@ export class RedsmithWizard {
       serverConfig.game.mods = this.config.mods;
     }
 
-    // Update mission header
-    const missionHeader: MissionHeader = {
-      m_sName: this.config.missionName || 'Default Mission',
-      m_sAuthor: this.config.missionAuthor || 'Default Author',
-      m_sSaveFileName: this.config.saveFileName || 'defaultSave'
-    };
+    // Update mission header - only include fields that are actually provided
+    const missionHeader: MissionHeader = {};
+    if (this.config.missionName) {
+      missionHeader.m_sName = this.config.missionName;
+    }
+    if (this.config.missionAuthor) {
+      missionHeader.m_sAuthor = this.config.missionAuthor;
+    }
+    if (this.config.saveFileName) {
+      missionHeader.m_sSaveFileName = this.config.saveFileName;
+    }
     serverConfig.game.gameProperties.missionHeader = missionHeader;
 
     return serverConfig;
   }
 
   private async saveConfig(config: ServerConfig, outputPath: string): Promise<void> {
+    // Check if file already exists - never overwrite by default
+    const fileExists = fs.existsSync(outputPath);
+    if (fileExists) {
+      throw new Error(`File already exists: ${outputPath}. Cannot overwrite existing files.`);
+    }
+    
     const configJson = JSON.stringify(config, null, 2);
     
     try {
@@ -120,11 +131,33 @@ export class RedsmithWizard {
     this.layout.printLabelValue('Public Port: ', config.publicPort.toString());
     this.layout.printLabelValue('A2S Port: ', config.a2s.port.toString());
     this.layout.printLabelValue('RCON Port: ', config.rcon.port.toString());
-    this.layout.printLabelValue('Mission Name: ', String(config.game.gameProperties.missionHeader.m_sName));
-    this.layout.printLabelValue('Mission Author: ', String(config.game.gameProperties.missionHeader.m_sAuthor));
-    this.layout.printLabelValue('Save File: ', String(config.game.gameProperties.missionHeader.m_sSaveFileName));
+    
+    // Show mission header fields only if they exist
+    if (config.game.gameProperties.missionHeader.m_sName) {
+      this.layout.printLabelValue('Mission Name: ', String(config.game.gameProperties.missionHeader.m_sName));
+    }
+    if (config.game.gameProperties.missionHeader.m_sAuthor) {
+      this.layout.printLabelValue('Mission Author: ', String(config.game.gameProperties.missionHeader.m_sAuthor));
+    }
+    if (config.game.gameProperties.missionHeader.m_sSaveFileName) {
+      this.layout.printLabelValue('Save File: ', String(config.game.gameProperties.missionHeader.m_sSaveFileName));
+    }
+    
     this.layout.printLabelValue('Output Path: ', path.resolve(outputPath));
     this.layout.printLine();
+  }
+
+  private async handleConfirmationResult(confirm: { proceed?: boolean }, config: ServerConfig): Promise<void> {
+    if (confirm.proceed === undefined) {
+      process.exit(0); // User cancelled (Ctrl+C)
+    }
+
+    if (confirm.proceed) {
+      await this.saveConfig(config, this.config.outputPath!);
+      this.layout.printSuccessBox('🎉 Server configuration forged successfully by Redsmith!');
+    } else {
+      this.layout.print('\n❌ Configuration not forged.', 'errorColor');
+    }
   }
 
   async run(): Promise<void> {
@@ -137,23 +170,22 @@ export class RedsmithWizard {
       
       this.displaySummary(config, this.config.outputPath!);
       
-      const confirm = await prompts({
-        type: 'confirm',
-        name: 'proceed',
-        message: 'Forge this configuration?',
-        initial: false
-      });
-
-      if (confirm.proceed === undefined) {
-        process.exit(0); // User cancelled (Ctrl+C)
-      }
-
-      if (confirm.proceed) {
-        await this.saveConfig(config, this.config.outputPath!);
-        this.layout.printSuccessBox('🎉 Server configuration forged successfully by Redsmith!');
+      let confirm: { proceed?: boolean };
+      
+      if (this.config.yes) {
+        // Skip confirmation when --yes flag is set
+        confirm = { proceed: true };
       } else {
-        this.layout.print('\n❌ Configuration not forged.', 'errorColor');
+        // Normal confirmation flow
+        confirm = await prompts({
+          type: 'confirm',
+          name: 'proceed',
+          message: 'Forge this configuration?',
+          initial: false
+        });
       }
+
+      await this.handleConfirmationResult(confirm, config);
 
     } catch (error) {
       this.layout.printError('\n' + String(error));
