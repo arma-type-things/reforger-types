@@ -10,14 +10,8 @@ export { server, scenario, parser };
 // Re-export for convenience
 export const SupportedPlatform = server.SupportedPlatform;
 
-// Export default initializer functions for convenience
+// Export main server config creation function
 export const createDefaultServerConfig = server.createDefaultServerConfig;
-export const createDefaultGameConfig = server.createDefaultGameConfig;
-export const createDefaultGameProperties = server.createDefaultGameProperties;
-export const createDefaultOperatingConfig = server.createDefaultOperatingConfig;
-export const createDefaultA2SConfig = server.createDefaultA2SConfig;
-export const createDefaultRconConfig = server.createDefaultRconConfig;
-export const createDefaultMissionHeader = server.createDefaultMissionHeader;
 
 // Export builder pattern classes
 export const ServerConfigBuilder = server.ServerConfigBuilder;

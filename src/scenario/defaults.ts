@@ -82,37 +82,3 @@ export function parseScenarioId(scenarioString: string): ScenarioId {
     throw new Error(`Failed to parse scenario ID: ${message}`);
   }
 }
-
-/**
- * Validates and normalizes a scenario input to its string representation
- * 
- * Accepts either a scenario string or ScenarioId object and returns the normalized
- * string representation. If a string is provided, it will be validated and parsed
- * first. This function is useful for ensuring consistent scenario format across
- * different input types.
- * 
- * @param input - Either a scenario string in "{ResourceId}Path" format or a ScenarioId object
- * @returns Normalized scenario string in the correct format
- * @throws {Error} If the input string format is invalid (when input is a string)
- * 
- * @example
- * ```typescript
- * import { normalizeScenarioId, createScenarioId } from 'reforger-types';
- * 
- * // From string
- * const normalized1 = normalizeScenarioId("{ECC61978EDCC2B5A}Missions/23_Campaign.conf");
- * 
- * // From ScenarioId object  
- * const scenario = createScenarioId("ECC61978EDCC2B5A", "Missions/23_Campaign.conf");
- * const normalized2 = normalizeScenarioId(scenario);
- * 
- * console.log(normalized1 === normalized2); // true
- * ```
- */
-export function normalizeScenarioId(input: string | ScenarioId): string {
-  if (typeof input === 'string') {
-    const scenario = parseScenarioId(input);
-    return scenario.toString();
-  }
-  return input.toString();
-}
