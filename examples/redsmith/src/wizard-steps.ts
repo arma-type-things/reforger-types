@@ -36,6 +36,12 @@ export abstract class BaseWizardStep implements WizardStep {
   abstract execute(config: RedsmithConfig, layout: LayoutManager): Promise<void>;
   abstract isRequired(config: RedsmithConfig): boolean;
 
+  protected handleUndefinedResponse(): never {
+    // Central place for handling user cancellation (Ctrl+C)
+    // Can be extended to add cleanup behaviors, logging, etc.
+    process.exit(0);
+  }
+
   protected async promptString(question: string, defaultValue: string = ''): Promise<string> {
     const response = await prompts({
       type: 'text',
@@ -58,7 +64,7 @@ export abstract class BaseWizardStep implements WizardStep {
     });
     
     if (response.value === undefined) {
-      process.exit(0); // User cancelled (Ctrl+C)
+      this.handleUndefinedResponse();
     }
     
     return response.value?.trim() || defaultValue;
@@ -101,7 +107,7 @@ export abstract class BaseWizardStep implements WizardStep {
     });
     
     if (response.value === undefined) {
-      process.exit(0); // User cancelled (Ctrl+C)
+      this.handleUndefinedResponse();
     }
     
     return response.value?.trim() || defaultValue;
@@ -136,7 +142,7 @@ export abstract class BaseWizardStep implements WizardStep {
     });
     
     if (response.value === undefined) {
-      process.exit(0); // User cancelled (Ctrl+C)
+      this.handleUndefinedResponse();
     }
     
     return response.value?.trim() || defaultValue;
@@ -178,7 +184,7 @@ export abstract class BaseWizardStep implements WizardStep {
     
     // Handle cancellation (Ctrl+C)
     if (response.value === undefined) {
-      process.exit(0);
+      this.handleUndefinedResponse();
     }
     
     // If empty string (user hit enter), use default value
@@ -205,7 +211,7 @@ export abstract class BaseWizardStep implements WizardStep {
     });
     
     if (response.value === undefined) {
-      process.exit(0); // User cancelled (Ctrl+C)
+      this.handleUndefinedResponse();
     }
     
     return response.value;
@@ -266,7 +272,7 @@ export class CrossPlayStep extends BaseWizardStep {
     });
     
     if (response.crossPlatform === undefined) {
-      process.exit(0); // User cancelled (Ctrl+C)
+      this.handleUndefinedResponse();
     }
     
     config.crossPlatform = response.crossPlatform;
