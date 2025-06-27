@@ -1,6 +1,6 @@
 import prompts from 'prompts';
 import * as path from 'path';
-import { OfficialScenarios, type OfficialScenarioName } from 'reforger-types';
+import { OfficialScenarios, type OfficialScenarioName, type Mod } from 'reforger-types';
 import { LayoutManager } from './layout.js';
 
 // Configuration holder interface
@@ -14,6 +14,7 @@ export interface RedsmithConfig {
   missionAuthor?: string;
   saveFileName?: string;
   outputPath?: string;
+  mods?: Mod[];
 }
 
 // Interface for wizard steps

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-import { OfficialScenarios, type OfficialScenarioName } from 'reforger-types';
+import { OfficialScenarios, type OfficialScenarioName, type Mod, isValidModId } from 'reforger-types';
 import { LayoutManager } from './layout.js';
 import { RedsmithWizard } from './wizard.js';
 import { ConfigValidator } from './validator.js';
@@ -18,6 +18,7 @@ interface CliOptions {
   missionName?: string;
   missionAuthor?: string;
   saveFile?: string;
+  mods?: string;
 }
 
 // Scenario name mapping
@@ -41,6 +42,32 @@ function mapScenarioName(scenarioName?: string): string | undefined {
   return mapped ? OfficialScenarios[mapped].toString() : undefined;
 }
 
+// Parse mod IDs from comma-separated string
+function parseModIds(modsString?: string): Mod[] {
+  if (!modsString) return [];
+  
+  // Split by comma and clean up each mod ID
+  const modIds = modsString.split(',').map(id => id.trim().toUpperCase()).filter(id => id.length > 0);
+  const validMods: Mod[] = [];
+  const invalidMods: string[] = [];
+  
+  for (const modId of modIds) {
+    if (isValidModId(modId)) {
+      validMods.push({ modId });
+    } else {
+      invalidMods.push(modId);
+    }
+  }
+  
+  // Report invalid mod IDs but don't fail completely
+  if (invalidMods.length > 0) {
+    console.warn(`Warning: Invalid mod IDs ignored: ${invalidMods.join(', ')}`);
+    console.warn('Mod IDs must be 16-character hexadecimal strings');
+  }
+  
+  return validMods;
+}
+
 // Convert CLI options to RedsmithConfig
 function cliToConfig(options: CliOptions): RedsmithConfig {
   return {
@@ -52,7 +79,8 @@ function cliToConfig(options: CliOptions): RedsmithConfig {
     missionName: options.missionName,
     missionAuthor: options.missionAuthor,
     saveFileName: options.saveFile,
-    outputPath: options.output
+    outputPath: options.output,
+    mods: parseModIds(options.mods)
   };
 }
 
@@ -105,6 +133,7 @@ function setupCli(): void {
     .option('--mission-name <name>', 'mission name')
     .option('--mission-author <author>', 'mission author')
     .option('--save-file <filename>', 'save file name')
+    .option('--mods <mods>', 'comma-separated list of mod IDs (16-character hex strings)')
     .action(async (options) => {
       await runWizard(options);
     });

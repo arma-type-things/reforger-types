@@ -11,7 +11,7 @@
   "dependencies": {
     "discord.js": "^14.0.0",
     "dotenv": "^16.0.0",
-    "reforger-types": "file:../.."
+    "reforger-types": "^0.0.1-rc1"
   },
   "devDependencies": {
     "@types/node": "^24.0.4",

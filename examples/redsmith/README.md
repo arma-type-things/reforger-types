@@ -22,6 +22,8 @@ npm run build
 
 ## Usage
 
+### Interactive Mode
+
 ```bash
 npm start
 ```
@@ -31,6 +33,39 @@ Or run directly:
 ```bash
 node dist/index.js
 ```
+
+### Command Line Options
+
+You can pre-fill configuration values using command line options:
+
+```bash
+node dist/index.js --name "My Server" --scenario conflict-everon --port 2001
+```
+
+Available options:
+- `--name <name>` - Server name
+- `--bind-address <address>` - Bind IP address
+- `--public-address <address>` - Public IP address
+- `--port <port>` - Bind port number
+- `--scenario <scenario>` - Scenario name (see supported scenarios below)
+- `--mission-name <name>` - Mission name
+- `--mission-author <author>` - Mission author
+- `--save-file <filename>` - Save file name
+- `--mods <mods>` - Comma-separated list of mod IDs (16-character hex strings)
+- `--output <path>` - Output file path
+
+### Mod Support
+
+You can specify mods to load on your server using the `--mods` option:
+
+```bash
+node dist/index.js --mods "59F0B6EA44FA0442,A123B456C789DEF0"
+```
+
+- Mod IDs must be 16-character hexadecimal strings
+- Multiple mods are separated by commas
+- Invalid mod IDs will be ignored with a warning
+- Mod IDs can be copied directly from the Reforger Workshop page for the mod
 
 ## Configuration Steps
 

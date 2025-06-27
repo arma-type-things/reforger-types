@@ -75,6 +75,11 @@ export class RedsmithWizard {
     serverConfig.publicAddress = this.config.publicAddress;
     serverConfig.publicPort = this.config.bindPort;
 
+    // Add mods if provided
+    if (this.config.mods && this.config.mods.length > 0) {
+      serverConfig.game.mods = this.config.mods;
+    }
+
     // Update mission header
     const missionHeader: MissionHeader = {
       m_sName: this.config.missionName || 'Default Mission',
