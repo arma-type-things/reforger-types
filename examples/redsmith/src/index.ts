@@ -19,6 +19,7 @@ interface CliOptions {
   missionAuthor?: string;
   saveFile?: string;
   mods?: string;
+  crossPlatform?: boolean;
   yes?: boolean;
   force?: boolean;
   validate?: boolean;
@@ -119,6 +120,7 @@ function cliToConfig(options: CliOptions): RedsmithConfig {
     saveFileName: options.saveFile,
     outputPath: options.output,
     mods: parseModIds(options.mods),
+    crossPlatform: options.crossPlatform,
     yes: options.yes,
     force: options.force,
     validate: options.validate
@@ -175,6 +177,8 @@ function setupCli(): void {
     .option('--mission-author <author>', 'mission author')
     .option('--save-file <filename>', 'save file name')
     .option('--mods <mods>', 'comma-separated list of mod IDs (16-character hex strings)')
+    .option('--cross-platform', 'enable cross-platform play (PC + Console)', true)
+    .option('--no-cross-platform', 'disable cross-platform play (PC only)')
     .option('-y, --yes', 'skip confirmation prompt and proceed automatically')
     .option('-f, --force', 'allow overwriting existing files and skip confirmation')
     .option('--validate', 'run validation after saving the configuration file')

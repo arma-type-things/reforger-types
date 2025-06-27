@@ -13,6 +13,7 @@ import {
   type WizardStep,
   ServerNameStep,
   NetworkStep,
+  CrossPlayStep,
   ScenarioStep,
   MissionHeaderStep,
   OutputStep
@@ -31,6 +32,7 @@ export class RedsmithWizard {
     this.steps = [
       new ServerNameStep(),
       new NetworkStep(),
+      new CrossPlayStep(),
       new ScenarioStep(),
       // new MissionHeaderStep(), // Disabled for now - mission header fields are optional
       new OutputStep()
@@ -68,7 +70,7 @@ export class RedsmithWizard {
       this.config.scenarioId,
       this.config.bindAddress,
       this.config.bindPort,
-      false, // crossPlatform - keeping simple for now
+      this.config.crossPlatform ?? true, // Default to true for redsmith
       '' // rconPassword - keeping empty for now
     );
 
@@ -132,6 +134,7 @@ export class RedsmithWizard {
     this.layout.printLabelValue('Public Port: ', config.publicPort.toString());
     this.layout.printLabelValue('A2S Port: ', config.a2s.port.toString());
     this.layout.printLabelValue('RCON Port: ', config.rcon.port.toString());
+    this.layout.printLabelValue('Cross-Platform: ', config.game.crossPlatform ? 'Enabled' : 'Disabled');
     
     // Show mission header fields only if they exist
     if (config.game.gameProperties.missionHeader.m_sName) {

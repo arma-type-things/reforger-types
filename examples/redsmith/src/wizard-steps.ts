@@ -15,6 +15,7 @@ export interface RedsmithConfig {
   saveFileName?: string;
   outputPath?: string;
   mods?: Mod[];
+  crossPlatform?: boolean;
   yes?: boolean;
   force?: boolean;
   validate?: boolean;
@@ -220,6 +221,32 @@ export class NetworkStep extends BaseWizardStep {
     if (!config.bindPort) {
       config.bindPort = await this.promptNumber('Bind port (main server port)', 2001, 1024, 65535);
     }
+    layout.printLine();
+  }
+}
+
+export class CrossPlayStep extends BaseWizardStep {
+  constructor() { super('Cross-Platform Settings'); }
+
+  isRequired(config: RedsmithConfig): boolean {
+    return config.crossPlatform === undefined;
+  }
+
+  async execute(config: RedsmithConfig, layout: LayoutManager): Promise<void> {
+    layout.printSectionHeader('🎮 Cross-Platform Settings');
+    
+    const response = await prompts({
+      type: 'confirm',
+      name: 'crossPlatform',
+      message: 'Enable cross-platform play (PC + Console)?',
+      initial: true
+    });
+    
+    if (response.crossPlatform === undefined) {
+      process.exit(0); // User cancelled (Ctrl+C)
+    }
+    
+    config.crossPlatform = response.crossPlatform;
     layout.printLine();
   }
 }
