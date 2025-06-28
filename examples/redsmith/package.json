@@ -1,6 +1,6 @@
 {
   "name": "redsmith",
-  "version": "0.0.1-rc2",
+  "version": "0.0.1",
   "description": "Interactive wizard for forging Arma Reforger server configuration files",
   "type": "module",
   "main": "dist/index.js",
