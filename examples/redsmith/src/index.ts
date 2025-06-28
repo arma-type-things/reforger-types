@@ -8,12 +8,16 @@ import { ConfigValidator } from './validator.js';
 import { type RedsmithConfig } from './wizard-steps.js';
 import { 
   BaseCommand,
+  FileContentType,
   type CliOptions,
   type WizardConfig,
   type ValidateConfig,
   type ExtractConfig,
-  type ExtractModsOptions
+  type ExtractModsOptions,
+  parseFileContentType,
+  resolveOutputFormat
 } from './types.js';
+import { formatModsByType } from './file-utils.js';
 
 // Parse mod IDs from comma-separated string
 function parseModIds(modsString?: string): Mod[] {
@@ -165,9 +169,15 @@ async function runExtractMods(configFile: string, outputFile: string | undefined
     // Extract mods from the configuration
     const mods = extractModsFromConfig(serverConfig);
     
+    // Resolve output format using the format resolution logic
+    const outputFormat = resolveOutputFormat(extractConfig.options.output, extractConfig.outputFile);
+    
+    // Generate content in the resolved format
+    const content = formatModsByType(mods, outputFormat);
+    
     if (!extractConfig.outputFile) {
-      // Output raw JSON to stdout for piping/reuse - NO branding, NO layout, NO pretty printing
-      console.log(JSON.stringify(mods, null, 2));
+      // Output to stdout for piping/reuse - NO branding, NO layout
+      console.log(content);
     } else {
       // File output path with branding and user feedback
       const layout = new LayoutManager();
@@ -175,6 +185,7 @@ async function runExtractMods(configFile: string, outputFile: string | undefined
       layout.printLine();
       layout.printMixed({ text: `  Config file: ${extractConfig.configFile}`, colorKey: 'dimColor' });
       layout.printMixed({ text: `  Output file: ${extractConfig.outputFile}`, colorKey: 'dimColor' });
+      layout.printMixed({ text: `  Output format: ${outputFormat}`, colorKey: 'dimColor' });
       layout.printMixed({ text: `  Found ${mods.length} mod(s) in configuration`, colorKey: 'bodyColor' });
       layout.printLine();
       
@@ -186,9 +197,6 @@ async function runExtractMods(configFile: string, outputFile: string | undefined
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
       }
-      
-      // Generate output content (JSON format)
-      const content = JSON.stringify(mods, null, 2);
       
       fs.writeFileSync(extractConfig.outputFile, content, 'utf-8');
       
@@ -262,9 +270,22 @@ function setupCli(): void {
     .description('Extract mod list from a server configuration file')
     .argument('<config-file>', 'Path to the server configuration JSON file')
     .argument('[output-file]', 'Output file path (omit for stdout)')
-    .option('-o, --output <format>', 'Output format')
-    .action(async (configFile: string, outputFile: string | undefined, options: ExtractModsOptions) => {
-      await runExtractMods(configFile, outputFile, options);
+    .option('-o, --output <format>', 'Output format (json, yaml, csv, text)')
+    .action(async (configFile: string, outputFile: string | undefined, options: { output?: string }) => {
+      // Validate and parse the format option
+      let parsedOptions: ExtractModsOptions = {};
+      
+      if (options.output) {
+        const parsedFormat = parseFileContentType(options.output);
+        if (!parsedFormat) {
+          const layout = new LayoutManager();
+          layout.printError(`Invalid output format: ${options.output}. Valid formats: json, yaml, csv, text`);
+          process.exit(1);
+        }
+        parsedOptions.output = parsedFormat;
+      }
+      
+      await runExtractMods(configFile, outputFile, parsedOptions);
     });
 
   program.parse();

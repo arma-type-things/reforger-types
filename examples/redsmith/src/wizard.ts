@@ -12,7 +12,8 @@ import {
 } from 'reforger-types';
 import { LayoutManager } from './layout.js';
 import { ConfigValidator } from './validator.js';
-import { FileContentType } from './types.js';
+import { FileContentType, getFileContentTypeFromExtension } from './types.js';
+import { parseModListByType } from './file-utils.js';
 import { 
   type RedsmithConfig, 
   type WizardStep,
@@ -25,167 +26,6 @@ import {
 } from './wizard-steps.js';
 
 /**
- * Determine file content type based on file extension
- * Defaults to TEXT for unrecognized extensions
- */
-function getFileContentType(filePath: string): FileContentType {
-  const extension = path.extname(filePath).toLowerCase();
-  
-  switch (extension) {
-    case '.json':
-      return FileContentType.JSON;
-    case '.yaml':
-    case '.yml':
-      return FileContentType.YAML;
-    case '.csv':
-      return FileContentType.CSV;
-    default:
-      return FileContentType.TEXT;
-  }
-}
-
-/**
- * Parse JSON/YAML content for mod list
- * Tries JSON first, falls back to YAML on parse failure
- * Returns empty list if neither format works or no valid mods found
- */
-function yamlJsonModListParser(content: string): Mod[] {
-  let parsed: any;
-  
-  // Try JSON first
-  try {
-    parsed = JSON.parse(content);
-  } catch {
-    // JSON failed, try YAML
-    try {
-      parsed = yaml.load(content);
-    } catch {
-      return [];
-    }
-  }
-  
-  const mods: Mod[] = [];
-  
-  // Handle array of objects
-  if (Array.isArray(parsed)) {
-    for (const item of parsed) {
-      if (typeof item === 'object' && item !== null && typeof (item as any).modId === 'string') {
-        const mod: Mod = { modId: (item as any).modId };
-        
-        // Only add optional properties if they exist and are valid
-        if (typeof (item as any).name === 'string') mod.name = (item as any).name;
-        if (typeof (item as any).version === 'string') mod.version = (item as any).version;
-        if (typeof (item as any).required === 'boolean') mod.required = (item as any).required;
-        
-        mods.push(mod);
-      }
-    }
-  }
-  // Handle single object
-  else if (typeof parsed === 'object' && parsed !== null && typeof (parsed as any).modId === 'string') {
-    const mod: Mod = { modId: (parsed as any).modId };
-    
-    if (typeof (parsed as any).name === 'string') mod.name = (parsed as any).name;
-    if (typeof (parsed as any).version === 'string') mod.version = (parsed as any).version;
-    if (typeof (parsed as any).required === 'boolean') mod.required = (parsed as any).required;
-    
-    mods.push(mod);
-  }
-  
-  return mods;
-}
-
-/**
- * Parse plain text content for mod list
- * Returns empty list if no valid mod IDs found
- */
-function textModListParser(content: string): Mod[] {
-  try {
-    const lines = content.split(/\r?\n/)
-      .map(line => line.replace(/\r$/, '').trim())
-      .filter(line => line.length > 0);
-    
-    const mods: Mod[] = [];
-    
-    for (const line of lines) {
-      if (isValidModId(line)) {
-        mods.push({ modId: line.toUpperCase() });
-      }
-    }
-    
-    return mods;
-  } catch {
-    return [];
-  }
-}
-
-/**
- * Parse CSV content for mod list
- * Expects header row: modId,name,version,required
- * Returns empty list if no valid mod IDs found
- */
-function csvModListParser(content: string): Mod[] {
-  try {
-    const lines = content.split(/\r?\n/)
-      .map(line => line.replace(/\r$/, '').trim())
-      .filter(line => line.length > 0);
-    
-    if (lines.length < 2) {
-      // Need at least header + one data row
-      return [];
-    }
-    
-    const headerLine = lines[0].toLowerCase();
-    const expectedHeaders = ['modid', 'name', 'version', 'required'];
-    const headers = headerLine.split(',').map(h => h.trim().toLowerCase());
-    
-    // Verify we have at least modId column
-    const modIdIndex = headers.indexOf('modid');
-    if (modIdIndex === -1) {
-      return [];
-    }
-    
-    // Find optional column indices
-    const nameIndex = headers.indexOf('name');
-    const versionIndex = headers.indexOf('version');
-    const requiredIndex = headers.indexOf('required');
-    
-    const mods: Mod[] = [];
-    
-    // Process data rows (skip header)
-    for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split(',').map(v => v.trim());
-      
-      if (values.length > modIdIndex && values[modIdIndex]) {
-        const modIdValue = values[modIdIndex].replace(/['"]/g, ''); // Remove quotes
-        
-        if (isValidModId(modIdValue)) {
-          const mod: Mod = { modId: modIdValue.toUpperCase() };
-          
-          // Add optional fields if they exist and have values
-          if (nameIndex >= 0 && values[nameIndex]) {
-            mod.name = values[nameIndex].replace(/['"]/g, '');
-          }
-          if (versionIndex >= 0 && values[versionIndex]) {
-            mod.version = values[versionIndex].replace(/['"]/g, '');
-          }
-          if (requiredIndex >= 0 && values[requiredIndex]) {
-            const reqValue = values[requiredIndex].replace(/['"]/g, '').toLowerCase();
-            mod.required = reqValue === 'true' || reqValue === '1';
-          }
-          
-          mods.push(mod);
-        }
-      }
-    }
-    
-    return mods;
-  } catch {
-    return [];
-  }
-}
-
-/**
  * Load and parse mod list from file
  * Returns empty list if file cannot be read or parsed
  */
@@ -196,18 +36,9 @@ function loadModListFromFile(filePath: string): Mod[] {
     }
     
     const content = fs.readFileSync(filePath, 'utf-8');
-    const fileType = getFileContentType(filePath);
+    const fileType = getFileContentTypeFromExtension(filePath);
     
-    switch (fileType) {
-      case FileContentType.JSON:
-      case FileContentType.YAML:
-        return yamlJsonModListParser(content);
-      case FileContentType.CSV:
-        return csvModListParser(content);
-      case FileContentType.TEXT:
-      default:
-        return textModListParser(content);
-    }
+    return parseModListByType(content, fileType);
   } catch {
     return [];
   }

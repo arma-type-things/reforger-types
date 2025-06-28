@@ -69,11 +69,68 @@ export interface CliOptions {
 
 // Extract mods command options interface
 export interface ExtractModsOptions {
-  output?: string;
+  output?: FileContentType;
   stdout?: boolean;
 }
 
 // Extract command options interface (for future subcommands)
 export interface ExtractOptions {
   mods?: ExtractModsOptions;
+}
+
+// Format parsing and validation utilities
+
+/**
+ * Maps extension/format strings to FileContentType
+ */
+function mapStringToFileContentType(input: string): FileContentType | null {
+  const normalized = input.toLowerCase().trim();
+  
+  switch (normalized) {
+    case 'json':
+      return FileContentType.JSON;
+    case 'yaml':
+    case 'yml':
+      return FileContentType.YAML;
+    case 'csv':
+      return FileContentType.CSV;
+    case 'text':
+    case 'txt':
+      return FileContentType.TEXT;
+    default:
+      return null;
+  }
+}
+
+export function parseFileContentType(format: string): FileContentType | null {
+  return mapStringToFileContentType(format);
+}
+
+export function getFileContentTypeFromExtension(filePath: string): FileContentType {
+  const extension = filePath.split('.').pop();
+  
+  if (!extension) {
+    return FileContentType.JSON; // default
+  }
+  
+  const mappedType = mapStringToFileContentType(extension);
+  return mappedType ?? FileContentType.JSON; // default if no match
+}
+
+export function resolveOutputFormat(
+  explicitFormat?: FileContentType,
+  outputFile?: string
+): FileContentType {
+  // Explicit format takes precedence
+  if (explicitFormat) {
+    return explicitFormat;
+  }
+  
+  // Infer from output file extension
+  if (outputFile) {
+    return getFileContentTypeFromExtension(outputFile);
+  }
+  
+  // Default to JSON
+  return FileContentType.JSON;
 }
