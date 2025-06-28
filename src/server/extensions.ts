@@ -2,7 +2,8 @@
  * Extensions for server types that add computed properties and helper methods
  */
 
-import { Mod as BaseMod } from './types';
+import * as fs from 'fs';
+import { Mod as BaseMod, ServerConfig } from './types';
 
 /**
  * Base URL for the Arma Reforger Workshop
@@ -223,4 +224,18 @@ export function dedupModList<T extends { modId: string }>(mods: T[]): T[] {
   }
   
   return result;
+}
+
+/**
+ * Loads and parses a server configuration from a JSON file
+ * @param filePath - Absolute path to the server configuration file
+ * @returns Parsed ServerConfig object, or undefined if file cannot be read or parsed
+ */
+export function loadServerConfigFromFile(filePath: string): ServerConfig | undefined {
+  try {
+    const content = fs.readFileSync(filePath, 'utf-8');
+    return JSON.parse(content) as ServerConfig;
+  } catch {
+    return undefined;
+  }
 }

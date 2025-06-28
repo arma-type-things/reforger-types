@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-import { OfficialScenarios, type OfficialScenarioName, type Mod, isValidModId } from 'reforger-types';
+import { OfficialScenarios, type OfficialScenarioName, type Mod, type ServerConfig, isValidModId } from 'reforger-types';
 import { LayoutManager } from './layout.js';
 import { RedsmithWizard } from './wizard.js';
 import { ConfigValidator } from './validator.js';
@@ -25,6 +25,17 @@ interface CliOptions {
   force?: boolean;
   validate?: boolean;
   stdout?: boolean; // true if -- was detected
+}
+
+// Extract mods command options interface
+interface ExtractModsOptions {
+  output?: string;
+  stdout?: boolean;
+}
+
+// Extract command options interface (for future subcommands)
+interface ExtractOptions {
+  mods?: ExtractModsOptions;
 }
 
 // Scenario name mapping
@@ -166,6 +177,62 @@ async function runValidator(configFile: string, options: { debug?: boolean }): P
   }
 }
 
+// Extract mods from ServerConfig
+export function extractModsFromConfig(serverConfig: ServerConfig): Mod[] {
+  return serverConfig.game.mods || [];
+}
+
+// Extract mods command handler
+async function runExtractMods(configFile: string, outputFile: string, options: ExtractModsOptions): Promise<void> {
+  try {
+    // Process the output file argument
+    const processedOptions = { ...options };
+    if (outputFile === '--') {
+      processedOptions.stdout = true;
+    }
+
+    const layout = new LayoutManager();
+    layout.printBrandedBanner('Extract Mods');
+    layout.printLine();
+    layout.printMixed({ text: `  Config file: ${configFile}`, colorKey: 'dimColor' });
+    layout.printMixed({ text: `  Output file: ${outputFile}`, colorKey: 'dimColor' });
+    layout.printMixed({ text: `  Options: ${JSON.stringify(processedOptions)}`, colorKey: 'dimColor' });
+    layout.printLine();
+
+    if (processedOptions.stdout) {
+      // Stdout output path - keep as stub
+      layout.printMixed({ text: '  [STUB] Stdout output not yet implemented', colorKey: 'errorColor' });
+      layout.printLine();
+    } else {
+      // File output path - implement basic file writing
+      layout.printMixed({ text: '  [STUB] Extract mods functionality not yet implemented', colorKey: 'errorColor' });
+      layout.printMixed({ text: `  Would write extracted mods to: ${outputFile}`, colorKey: 'dimColor' });
+      layout.printLine();
+      
+      // Create a placeholder file to demonstrate the file path
+      const fs = await import('fs');
+      const path = await import('path');
+      
+      // Ensure directory exists
+      const dir = path.dirname(outputFile);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      
+      // Write placeholder content
+      const placeholderContent = '# STUB: Extracted mods would appear here\n# This is a placeholder file created by the stub implementation\n';
+      fs.writeFileSync(outputFile, placeholderContent, 'utf-8');
+      
+      layout.printMixed({ text: `  ✅ Placeholder file created: ${outputFile}`, colorKey: 'successColor' });
+      layout.printLine();
+    }
+  } catch (error) {
+    const layout = new LayoutManager();
+    layout.printError(String(error));
+    process.exit(1);
+  }
+}
+
 // CLI setup
 function setupCli(): void {
   const program = new Command();
@@ -213,6 +280,22 @@ function setupCli(): void {
     .description('List all available scenario codes and names')
     .action(() => {
       listScenarios();
+    });
+
+  // Extract command with sub-commands
+  const extractCommand = program
+    .command('extract')
+    .description('Extract information from server configuration files');
+
+  // Extract mods sub-command
+  extractCommand
+    .command('mods')
+    .description('Extract mod list from a server configuration file')
+    .argument('<config-file>', 'Path to the server configuration JSON file')
+    .argument('<output-file>', 'Output file path (use -- for stdout)')
+    .option('-o, --output <format>', 'Output format')
+    .action(async (configFile: string, outputFile: string, options: ExtractModsOptions) => {
+      await runExtractMods(configFile, outputFile, options);
     });
 
   program.parse();

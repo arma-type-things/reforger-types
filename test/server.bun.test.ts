@@ -177,3 +177,85 @@ describe('New Properties from Wiki', () => {
     expect(gameProperties.serverMaxViewDistance).toBe(1600); // Wiki default: 1600 (updated from 4000)
   });
 });
+
+describe('loadServerConfigFromFile', () => {
+  const { loadServerConfigFromFile } = server;
+  
+  test('loads valid JSON server config file', () => {
+    // Create a valid server config object
+    const validConfig = server.createDefaultServerConfig(
+      'Test Server',
+      'MyScenario',
+      '127.0.0.1',
+      2001,
+      true,
+      'testpass'
+    );
+    
+    // Write to temporary file
+    const tempFile = '/tmp/test-server-config.json';
+    const fs = require('fs');
+    fs.writeFileSync(tempFile, JSON.stringify(validConfig, null, 2));
+    
+    // Test loading
+    const result = loadServerConfigFromFile(tempFile);
+    
+    expect(result).toBeDefined();
+    expect(result?.game.name).toBe('Test Server');
+    expect(result?.bindPort).toBe(2001);
+    expect(result?.game.crossPlatform).toBe(true);
+    
+    // Cleanup
+    fs.unlinkSync(tempFile);
+  });
+
+  test('returns undefined for invalid JSON file', () => {
+    // Write invalid JSON to temporary file
+    const tempFile = '/tmp/test-invalid.json';
+    const fs = require('fs');
+    fs.writeFileSync(tempFile, '{ invalid json content');
+    
+    const result = loadServerConfigFromFile(tempFile);
+    
+    expect(result).toBeUndefined();
+    
+    // Cleanup
+    fs.unlinkSync(tempFile);
+  });
+
+  test('returns undefined for non-existent file', () => {
+    const result = loadServerConfigFromFile('/tmp/non-existent-file.json');
+    expect(result).toBeUndefined();
+  });
+
+  test('returns undefined for empty file', () => {
+    // Write empty file
+    const tempFile = '/tmp/test-empty.json';
+    const fs = require('fs');
+    fs.writeFileSync(tempFile, '');
+    
+    const result = loadServerConfigFromFile(tempFile);
+    
+    expect(result).toBeUndefined();
+    
+    // Cleanup
+    fs.unlinkSync(tempFile);
+  });
+
+  test('loads minimal valid JSON object', () => {
+    // Write minimal valid JSON
+    const tempFile = '/tmp/test-minimal.json';
+    const fs = require('fs');
+    const minimalConfig = { game: { name: 'Minimal' }, bindPort: 2001 };
+    fs.writeFileSync(tempFile, JSON.stringify(minimalConfig));
+    
+    const result = loadServerConfigFromFile(tempFile);
+    
+    expect(result).toBeDefined();
+    expect(result?.game.name).toBe('Minimal');
+    expect(result?.bindPort).toBe(2001);
+    
+    // Cleanup
+    fs.unlinkSync(tempFile);
+  });
+});
