@@ -56,6 +56,7 @@ export type ParserError = parser.ParserError;
 // Export scenario utilities for convenience
 export const MissionResourceReference = scenario.MissionResourceReference;
 export const ScenarioId = scenario.ScenarioId;
+export const ScenarioIdExtended = scenario.ScenarioIdExtended;
 export const OfficialScenarios = scenario.OfficialScenarios;
 export const createDefaultScenarioId = scenario.createDefaultScenarioId;
 export const createScenarioId = scenario.createScenarioId;
@@ -65,3 +66,4 @@ export const parseScenarioId = scenario.parseScenarioId;
 export type MissionResourceId = scenario.MissionResourceId;
 export type MissionPath = scenario.MissionPath;
 export type OfficialScenarioName = scenario.OfficialScenarioName;
+export type ScenarioMetadata = scenario.ScenarioMetadata;

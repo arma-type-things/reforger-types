@@ -1,13 +1,49 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-import { OfficialScenarios, type OfficialScenarioName, type Mod, type ServerConfig, isValidModId } from 'reforger-types';
+import { OfficialScenarios, type OfficialScenarioName, type Mod, type ServerConfig, isValidModId, loadServerConfigFromFile, ScenarioIdExtended } from 'reforger-types';
 import { LayoutManager } from './layout.js';
 import { RedsmithWizard } from './wizard.js';
 import { ConfigValidator } from './validator.js';
 import { type RedsmithConfig } from './wizard-steps.js';
 
-// Command line options interface
+// Base command types
+enum BaseCommand {
+  WIZARD = 'wizard',
+  VALIDATE = 'validate', 
+  EXTRACT = 'extract'
+}
+
+// Common options shared across all commands
+interface BaseConfig {
+  command: BaseCommand;
+}
+
+// Wizard-specific config (extends existing RedsmithConfig)
+interface WizardConfig extends BaseConfig {
+  command: BaseCommand.WIZARD;
+  redsmithConfig: RedsmithConfig;
+}
+
+// Validate command config
+interface ValidateConfig extends BaseConfig {
+  command: BaseCommand.VALIDATE;
+  configFile: string;
+  debug?: boolean;
+}
+
+// Extract command config
+interface ExtractConfig extends BaseConfig {
+  command: BaseCommand.EXTRACT;
+  configFile: string;
+  outputFile?: string;
+  options: ExtractModsOptions;
+}
+
+// Union type for all possible command configurations
+type CommandConfig = WizardConfig | ValidateConfig | ExtractConfig;
+
+// Command line options interface (for CLI parsing)
 interface CliOptions {
   name?: string;
   bindAddress?: string;
@@ -36,27 +72,6 @@ interface ExtractModsOptions {
 // Extract command options interface (for future subcommands)
 interface ExtractOptions {
   mods?: ExtractModsOptions;
-}
-
-// Scenario name mapping
-function mapScenarioName(scenarioName?: string): string | undefined {
-  if (!scenarioName) return undefined;
-
-  const scenarioMap: Record<string, OfficialScenarioName> = {
-    'conflict-everon': 'CONFLICT_EVERON',
-    'conflict-northern-everon': 'CONFLICT_NORTHERN_EVERON',
-    'conflict-southern-everon': 'CONFLICT_SOUTHERN_EVERON',
-    'conflict-western-everon': 'CONFLICT_WESTERN_EVERON',
-    'conflict-montignac': 'CONFLICT_MONTIGNAC',
-    'conflict-arland': 'CONFLICT_ARLAND',
-    'combat-ops-arland': 'COMBAT_OPS_ARLAND',
-    'combat-ops-everon': 'COMBAT_OPS_EVERON',
-    'game-master-everon': 'GAME_MASTER_EVERON',
-    'game-master-arland': 'GAME_MASTER_ARLAND'
-  };
-
-  const mapped = scenarioMap[scenarioName.toLowerCase()];
-  return mapped ? OfficialScenarios[mapped].toString() : undefined;
 }
 
 // Parse mod IDs from comma-separated string
@@ -94,23 +109,12 @@ function listScenarios(): void {
   layout.printMixed({ text: '  Use these scenario codes with the --scenario option:', colorKey: 'dimColor' });
   layout.printLine();
 
-  const scenarioMap: Array<{ code: string; name: string }> = [
-    { code: 'conflict-everon', name: 'Conflict Everon' },
-    { code: 'conflict-northern-everon', name: 'Conflict Northern Everon' },
-    { code: 'conflict-southern-everon', name: 'Conflict Southern Everon' },
-    { code: 'conflict-western-everon', name: 'Conflict Western Everon' },
-    { code: 'conflict-montignac', name: 'Conflict Montignac' },
-    { code: 'conflict-arland', name: 'Conflict Arland' },
-    { code: 'combat-ops-arland', name: 'Combat Ops Arland' },
-    { code: 'combat-ops-everon', name: 'Combat Ops Everon' },
-    { code: 'game-master-everon', name: 'Game Master Everon' },
-    { code: 'game-master-arland', name: 'Game Master Arland' }
-  ];
+  const allScenarios = ScenarioIdExtended.getAllScenarios();
 
-  for (const scenario of scenarioMap) {
+  for (const scenario of allScenarios) {
     layout.printMixed(
       { text: `  ${scenario.code.padEnd(28)}`, colorKey: 'bodyColor' },
-      { text: scenario.name, colorKey: 'valueColor' }
+      { text: scenario.displayName, colorKey: 'valueColor' }
     );
   }
 
@@ -120,25 +124,47 @@ function listScenarios(): void {
   layout.printLine();
 }
 
-// Convert CLI options to RedsmithConfig
-function cliToConfig(options: CliOptions): RedsmithConfig {
+// Create WizardConfig from CLI options
+function createWizardConfig(options: CliOptions): WizardConfig {
   return {
-    serverName: options.name,
-    bindAddress: options.bindAddress,
-    publicAddress: options.publicAddress,
-    bindPort: options.port,
-    scenarioId: mapScenarioName(options.scenario),
-    missionName: options.missionName,
-    missionAuthor: options.missionAuthor,
-    saveFileName: options.saveFile,
-    outputPath: options.output,
-    mods: parseModIds(options.mods),
-    modListFile: options.modListFile,
-    crossPlatform: options.crossPlatform,
-    yes: options.yes,
-    force: options.force,
-    validate: options.validate,
-    stdout: options.stdout
+    command: BaseCommand.WIZARD,
+    redsmithConfig: {
+      serverName: options.name,
+      bindAddress: options.bindAddress,
+      publicAddress: options.publicAddress,
+      bindPort: options.port,
+      scenarioId: ScenarioIdExtended.mapScenarioName(options.scenario)?.toString(),
+      missionName: options.missionName,
+      missionAuthor: options.missionAuthor,
+      saveFileName: options.saveFile,
+      outputPath: options.output,
+      mods: parseModIds(options.mods),
+      modListFile: options.modListFile,
+      crossPlatform: options.crossPlatform,
+      yes: options.yes,
+      force: options.force,
+      validate: options.validate,
+      stdout: options.stdout
+    }
+  };
+}
+
+// Create ValidateConfig from command arguments
+function createValidateConfig(configFile: string, options: { debug?: boolean }): ValidateConfig {
+  return {
+    command: BaseCommand.VALIDATE,
+    configFile,
+    debug: options.debug
+  };
+}
+
+// Create ExtractConfig from command arguments
+function createExtractConfig(configFile: string, outputFile: string | undefined, options: ExtractModsOptions): ExtractConfig {
+  return {
+    command: BaseCommand.EXTRACT,
+    configFile,
+    outputFile,
+    options
   };
 }
 
@@ -151,8 +177,8 @@ async function runWizard(options: CliOptions): Promise<void> {
       options.stdout = true;
     }
     
-    const initialConfig = cliToConfig(options);
-    const wizard = new RedsmithWizard(initialConfig);
+    const wizardConfig = createWizardConfig(options);
+    const wizard = new RedsmithWizard(wizardConfig.redsmithConfig);
     await wizard.run();
   } catch (error) {
     const layout = new LayoutManager();
@@ -164,12 +190,14 @@ async function runWizard(options: CliOptions): Promise<void> {
 // Validate command handler
 async function runValidator(configFile: string, options: { debug?: boolean }): Promise<void> {
   try {
-    if (options.debug) {
+    const validateConfig = createValidateConfig(configFile, options);
+    
+    if (validateConfig.debug) {
       process.env.DEBUG = 'true';
     }
     
     const validator = new ConfigValidator();
-    await validator.validateAndExit(configFile);
+    await validator.validateAndExit(validateConfig.configFile);
   } catch (error) {
     const layout = new LayoutManager();
     layout.printError(String(error));
@@ -183,47 +211,47 @@ export function extractModsFromConfig(serverConfig: ServerConfig): Mod[] {
 }
 
 // Extract mods command handler
-async function runExtractMods(configFile: string, outputFile: string, options: ExtractModsOptions): Promise<void> {
+async function runExtractMods(configFile: string, outputFile: string | undefined, options: ExtractModsOptions): Promise<void> {
   try {
-    // Process the output file argument
-    const processedOptions = { ...options };
-    if (outputFile === '--') {
-      processedOptions.stdout = true;
+    const extractConfig = createExtractConfig(configFile, outputFile, options);
+    
+    // Load the server configuration
+    const serverConfig = loadServerConfigFromFile(extractConfig.configFile);
+    if (!serverConfig) {
+      throw new Error(`Failed to load or parse config file: ${extractConfig.configFile}`);
     }
 
-    const layout = new LayoutManager();
-    layout.printBrandedBanner('Extract Mods');
-    layout.printLine();
-    layout.printMixed({ text: `  Config file: ${configFile}`, colorKey: 'dimColor' });
-    layout.printMixed({ text: `  Output file: ${outputFile}`, colorKey: 'dimColor' });
-    layout.printMixed({ text: `  Options: ${JSON.stringify(processedOptions)}`, colorKey: 'dimColor' });
-    layout.printLine();
-
-    if (processedOptions.stdout) {
-      // Stdout output path - keep as stub
-      layout.printMixed({ text: '  [STUB] Stdout output not yet implemented', colorKey: 'errorColor' });
-      layout.printLine();
+    // Extract mods from the configuration
+    const mods = extractModsFromConfig(serverConfig);
+    
+    if (!extractConfig.outputFile) {
+      // Output raw JSON to stdout for piping/reuse - NO branding, NO layout, NO pretty printing
+      console.log(JSON.stringify(mods, null, 2));
     } else {
-      // File output path - implement basic file writing
-      layout.printMixed({ text: '  [STUB] Extract mods functionality not yet implemented', colorKey: 'errorColor' });
-      layout.printMixed({ text: `  Would write extracted mods to: ${outputFile}`, colorKey: 'dimColor' });
+      // File output path with branding and user feedback
+      const layout = new LayoutManager();
+      layout.printBrandedBanner('Extract Mods');
+      layout.printLine();
+      layout.printMixed({ text: `  Config file: ${extractConfig.configFile}`, colorKey: 'dimColor' });
+      layout.printMixed({ text: `  Output file: ${extractConfig.outputFile}`, colorKey: 'dimColor' });
+      layout.printMixed({ text: `  Found ${mods.length} mod(s) in configuration`, colorKey: 'bodyColor' });
       layout.printLine();
       
-      // Create a placeholder file to demonstrate the file path
       const fs = await import('fs');
       const path = await import('path');
       
       // Ensure directory exists
-      const dir = path.dirname(outputFile);
+      const dir = path.dirname(extractConfig.outputFile);
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
       }
       
-      // Write placeholder content
-      const placeholderContent = '# STUB: Extracted mods would appear here\n# This is a placeholder file created by the stub implementation\n';
-      fs.writeFileSync(outputFile, placeholderContent, 'utf-8');
+      // Generate output content (JSON format)
+      const content = JSON.stringify(mods, null, 2);
       
-      layout.printMixed({ text: `  ✅ Placeholder file created: ${outputFile}`, colorKey: 'successColor' });
+      fs.writeFileSync(extractConfig.outputFile, content, 'utf-8');
+      
+      layout.printMixed({ text: `  ✅ Extracted ${mods.length} mod(s) to: ${extractConfig.outputFile}`, colorKey: 'successColor' });
       layout.printLine();
     }
   } catch (error) {
@@ -292,9 +320,9 @@ function setupCli(): void {
     .command('mods')
     .description('Extract mod list from a server configuration file')
     .argument('<config-file>', 'Path to the server configuration JSON file')
-    .argument('<output-file>', 'Output file path (use -- for stdout)')
+    .argument('[output-file]', 'Output file path (omit for stdout)')
     .option('-o, --output <format>', 'Output format')
-    .action(async (configFile: string, outputFile: string, options: ExtractModsOptions) => {
+    .action(async (configFile: string, outputFile: string | undefined, options: ExtractModsOptions) => {
       await runExtractMods(configFile, outputFile, options);
     });
 
