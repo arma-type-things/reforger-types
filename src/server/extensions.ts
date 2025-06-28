@@ -204,3 +204,23 @@ export function toBaseMod(modExtended: ModExtended): BaseMod {
 export function toBaseModList(modsExtended: ModExtended[]): BaseMod[] {
   return modsExtended.map(mod => toBaseMod(mod));
 }
+
+/**
+ * Deduplicates a list of mods by their modId (hex ID)
+ * Keeps the first occurrence of each modId
+ * @param mods - Array of mod objects to deduplicate
+ * @returns Array of mods with duplicates removed
+ */
+export function dedupModList<T extends { modId: string }>(mods: T[]): T[] {
+  const seen = new Set<string>();
+  const result: T[] = [];
+  
+  for (const mod of mods) {
+    if (!seen.has(mod.modId)) {
+      seen.add(mod.modId);
+      result.push(mod);
+    }
+  }
+  
+  return result;
+}
