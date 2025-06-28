@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { execSync } from 'child_process';
-import { readdirSync } from 'fs';
+import { readdirSync, statSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -30,10 +30,29 @@ function runTest(testFile) {
   }
 }
 
-// Get all test files in the integration directory
-const testFiles = readdirSync(__dirname)
-  .filter(file => file.endsWith('.test.js') && file !== 'run-all.js')
-  .sort(); // Run tests in alphabetical order
+// Recursively find all test files in the integration directory and subdirectories
+function findTestFiles(dir, relativePath = '') {
+  const files = [];
+  const entries = readdirSync(dir);
+  
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry);
+    const stat = statSync(fullPath);
+    
+    if (stat.isDirectory()) {
+      // Recursively search subdirectories
+      const subFiles = findTestFiles(fullPath, path.join(relativePath, entry));
+      files.push(...subFiles);
+    } else if (entry.endsWith('.test.js') && entry !== 'run-all.js') {
+      // Add test files with their relative path
+      files.push(path.join(relativePath, entry));
+    }
+  }
+  
+  return files;
+}
+
+const testFiles = findTestFiles(__dirname).sort(); // Run tests in alphabetical order
 
 if (testFiles.length === 0) {
   console.log('⚠️  No integration test files found');

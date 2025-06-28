@@ -1,8 +1,9 @@
 import { spawn } from 'child_process';
 import { readFileSync, unlinkSync, existsSync } from 'fs';
 import { join } from 'path';
+import { REDSMITH_DIST_PATH } from './references.js';
 
-const REDSMITH_PATH = join(process.cwd(), 'examples', 'redsmith', 'dist', 'index.js');
+const REDSMITH_PATH = REDSMITH_DIST_PATH;
 const OUTPUT_FILE = join(process.cwd(), 'test-invalid-mod-config.json');
 
 // Clean up any existing test file

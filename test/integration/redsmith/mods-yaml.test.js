@@ -1,10 +1,12 @@
 import { spawn } from 'child_process';
 import { readFileSync, unlinkSync, existsSync } from 'fs';
 import { join } from 'path';
+import { REDSMITH_DIST_PATH, TEST_FILES } from './references.js';
 
-const REDSMITH_PATH = join(process.cwd(), 'examples', 'redsmith', 'dist', 'index.js');
-const CSV_MOD_FILE = join(process.cwd(), 'examples', 'redsmith', 'test', 'test-mods.csv');
-const CSV_MINIMAL_FILE = join(process.cwd(), 'examples', 'redsmith', 'test', 'test-mods-minimal.csv');
+const REDSMITH_PATH = REDSMITH_DIST_PATH;
+const YAML_MOD_FILE = TEST_FILES.YAML_MODS;
+const YML_MOD_FILE = TEST_FILES.YML_MODS;
+const JSON_COMPAT_YAML_FILE = TEST_FILES.JSON_COMPAT_YAML_MODS;
 
 // Helper function to run redsmith with given options and validate output
 async function runRedsmithTest(testName, args, expectedModIds, expectedModCount) {
@@ -96,42 +98,50 @@ async function runRedsmithTest(testName, args, expectedModIds, expectedModCount)
 }
 
 async function runTests() {
-  console.log('🧪 Running CSV mod list integration tests...');
+  console.log('🧪 Running YAML mod list integration tests...');
   
   try {
-    // Test 1: CSV file with full headers (modId,name,version,required)
+    // Test 1: YAML file with YAML-specific syntax (.yaml extension)
     await runRedsmithTest(
-      'CSV full format',
-      ['--mod-list-file', CSV_MOD_FILE],
+      'YAML mod file',
+      ['--mod-list-file', YAML_MOD_FILE],
       ['591AF5BDA9F7CE8B', '5A5A5A5A5A5A5A5A', 'DEADBEEFDEADBEEF'],
       3
     );
     
-    // Test 2: CSV file with minimal headers (modId,name only)
+    // Test 2: YAML file with .yml extension
     await runRedsmithTest(
-      'CSV minimal format',
-      ['--mod-list-file', CSV_MINIMAL_FILE],
-      ['111111111111111C', '222222222222222D'],
+      'YML mod file',
+      ['--mod-list-file', YML_MOD_FILE],
+      ['111111111111111A', '222222222222222B'],
       2
     );
     
-    // Test 3: Combined CLI mods and CSV file
+    // Test 3: JSON-compatible YAML (should use JSON parser path)
     await runRedsmithTest(
-      'Combined CLI and CSV',
-      ['--mods', '1111111111111111,2222222222222222', '--mod-list-file', CSV_MOD_FILE],
+      'JSON-compatible YAML',
+      ['--mod-list-file', JSON_COMPAT_YAML_FILE],
+      ['AAAAAAAAAAAAAAAA', 'BBBBBBBBBBBBBBBB'],
+      2
+    );
+    
+    // Test 4: Combined CLI mods and YAML file
+    await runRedsmithTest(
+      'Combined CLI and YAML',
+      ['--mods', '1111111111111111,2222222222222222', '--mod-list-file', YAML_MOD_FILE],
       ['1111111111111111', '2222222222222222', '591AF5BDA9F7CE8B', '5A5A5A5A5A5A5A5A', 'DEADBEEFDEADBEEF'],
       5
     );
     
-    // Test 4: Deduplication between CLI and CSV (using overlapping mod ID)
+    // Test 5: Deduplication between CLI and YAML (using overlapping mod ID)
     await runRedsmithTest(
-      'CSV deduplication',
-      ['--mods', '591AF5BDA9F7CE8B,3333333333333333', '--mod-list-file', CSV_MOD_FILE],
+      'YAML deduplication',
+      ['--mods', '591AF5BDA9F7CE8B,3333333333333333', '--mod-list-file', YAML_MOD_FILE],
       ['591AF5BDA9F7CE8B', '3333333333333333', '5A5A5A5A5A5A5A5A', 'DEADBEEFDEADBEEF'],
       4
     );
     
-    console.log('🎉 All CSV mod list integration tests passed!');
+    console.log('🎉 All YAML mod list integration tests passed!');
     
   } catch (error) {
     console.error('❌ Test failed:', error.message);

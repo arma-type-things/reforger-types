@@ -1,10 +1,11 @@
 import { spawn } from 'child_process';
 import { readFileSync, unlinkSync, existsSync } from 'fs';
 import { join } from 'path';
+import { REDSMITH_DIST_PATH, TEST_FILES } from './references.js';
 
-const REDSMITH_PATH = join(process.cwd(), 'examples', 'redsmith', 'dist', 'index.js');
-const JSON_MOD_FILE = join(process.cwd(), 'examples', 'redsmith', 'test', 'test-mods.json');
-const TXT_MOD_FILE = join(process.cwd(), 'examples', 'redsmith', 'test', 'test-mods.txt');
+const REDSMITH_PATH = REDSMITH_DIST_PATH;
+const JSON_MOD_FILE = TEST_FILES.JSON_MODS;
+const TXT_MOD_FILE = TEST_FILES.TXT_MODS;
 
 // Helper function to run redsmith with given options and validate output
 async function runRedsmithTest(testName, args, expectedModIds, expectedModCount) {
