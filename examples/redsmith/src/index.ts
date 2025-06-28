@@ -6,73 +6,14 @@ import { LayoutManager } from './layout.js';
 import { RedsmithWizard } from './wizard.js';
 import { ConfigValidator } from './validator.js';
 import { type RedsmithConfig } from './wizard-steps.js';
-
-// Base command types
-enum BaseCommand {
-  WIZARD = 'wizard',
-  VALIDATE = 'validate', 
-  EXTRACT = 'extract'
-}
-
-// Common options shared across all commands
-interface BaseConfig {
-  command: BaseCommand;
-}
-
-// Wizard-specific config (extends existing RedsmithConfig)
-interface WizardConfig extends BaseConfig {
-  command: BaseCommand.WIZARD;
-  redsmithConfig: RedsmithConfig;
-}
-
-// Validate command config
-interface ValidateConfig extends BaseConfig {
-  command: BaseCommand.VALIDATE;
-  configFile: string;
-  debug?: boolean;
-}
-
-// Extract command config
-interface ExtractConfig extends BaseConfig {
-  command: BaseCommand.EXTRACT;
-  configFile: string;
-  outputFile?: string;
-  options: ExtractModsOptions;
-}
-
-// Union type for all possible command configurations
-type CommandConfig = WizardConfig | ValidateConfig | ExtractConfig;
-
-// Command line options interface (for CLI parsing)
-interface CliOptions {
-  name?: string;
-  bindAddress?: string;
-  publicAddress?: string;
-  port?: number;
-  scenario?: string;
-  output?: string;
-  missionName?: string;
-  missionAuthor?: string;
-  saveFile?: string;
-  mods?: string;
-  modListFile?: string;
-  crossPlatform?: boolean;
-  yes?: boolean;
-  force?: boolean;
-  validate?: boolean;
-  stdout?: boolean; // true if -- was detected
-}
-
-// Extract mods command options interface
-interface ExtractModsOptions {
-  output?: string;
-  stdout?: boolean;
-}
-
-// Extract command options interface (for future subcommands)
-interface ExtractOptions {
-  mods?: ExtractModsOptions;
-}
+import { 
+  BaseCommand,
+  type CliOptions,
+  type WizardConfig,
+  type ValidateConfig,
+  type ExtractConfig,
+  type ExtractModsOptions
+} from './types.js';
 
 // Parse mod IDs from comma-separated string
 function parseModIds(modsString?: string): Mod[] {

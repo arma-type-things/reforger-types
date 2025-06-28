@@ -12,6 +12,7 @@ import {
 } from 'reforger-types';
 import { LayoutManager } from './layout.js';
 import { ConfigValidator } from './validator.js';
+import { FileContentType } from './types.js';
 import { 
   type RedsmithConfig, 
   type WizardStep,
@@ -22,16 +23,6 @@ import {
   MissionHeaderStep,
   OutputStep
 } from './wizard-steps.js';
-
-/**
- * File content types based on file extension
- */
-enum FileContentType {
-  TEXT = 'text',
-  JSON = 'json',
-  YAML = 'yaml',
-  CSV = 'csv'
-}
 
 /**
  * Determine file content type based on file extension
