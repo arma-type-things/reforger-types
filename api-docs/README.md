@@ -10,7 +10,7 @@ Core server configuration types, builder patterns, and mod utilities.
 - **[Types](./server/types.md)** - ServerConfig, GameConfig, and all configuration interfaces
 - **[Defaults](./server/defaults.md)** - Default creation functions with sensible defaults
 - **[Builder](./server/builder.md)** - Fluent API builder for step-by-step configuration creation
-- **[Extensions](./server/extensions.md)** - Mod utilities and workshop URL helpers
+- **[Extensions](./server/extensions.md)** - Mod utilities, configuration file loading, and workshop URL helpers
 
 ### [Parser Module](./parser/)
 Parsing and validation system for server configurations.
@@ -25,6 +25,7 @@ Mission resource reference utilities and scenario handling.
 
 - **[Types](./scenario/types.md)** - Mission resource reference types and classes
 - **[Defaults](./scenario/defaults.md)** - Default scenario creation utilities
+- **[Extensions](./scenario/extensions.md)** - Extended scenario utilities, metadata, and mapping functions
 
 ## Getting Started
 
