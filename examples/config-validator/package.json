@@ -16,7 +16,7 @@
   "dependencies": {
     "chalk": "^5.3.0",
     "commander": "^14.0.0",
-    "reforger-types": "^0.0.1-rc1"
+    "reforger-types": "^0.0.1-rc2"
   },
   "devDependencies": {
     "@types/node": "^24.0.4",
