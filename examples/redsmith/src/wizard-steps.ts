@@ -15,6 +15,7 @@ export interface RedsmithConfig {
   saveFileName?: string;
   outputPath?: string;
   mods?: Mod[];
+  modListFile?: string;
   crossPlatform?: boolean;
   yes?: boolean;
   force?: boolean;

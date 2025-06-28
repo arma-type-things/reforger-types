@@ -33,6 +33,7 @@ export const createModExtendedListFromUrls = server.createModExtendedListFromUrl
 export const createModListFromUrls = server.createModListFromUrls;
 export const toBaseMod = server.toBaseMod;
 export const toBaseModList = server.toBaseModList;
+export const dedupModList = server.dedupModList;
 export const WORKSHOP_BASE_URL = server.WORKSHOP_BASE_URL;
 
 // Type-only exports for TypeScript users

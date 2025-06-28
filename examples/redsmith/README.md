@@ -51,6 +51,7 @@ Available options:
 - `--mission-author <author>` - Mission author
 - `--save-file <filename>` - Save file name
 - `--mods <mods>` - Comma-separated list of mod IDs (16-character hex strings)
+- `--mod-list-file <path>` - Path to file containing mod IDs (supports JSON, text, and CSV formats)
 - `--output <path>` - Output file path
 - `--yes` - Skip confirmation prompt and proceed automatically
 - `--force` - Allow overwriting existing files and skip confirmation
@@ -86,14 +87,62 @@ node dist/index.js list-scenarios
 
 ### Mod Support
 
-You can specify mods to load on your server using the `--mods` option:
+You can specify mods to load on your server in two ways:
+
+#### Command Line Mods
+
+Use the `--mods` option for a quick list of mod IDs:
 
 ```bash
 node dist/index.js --mods "59F0B6EA44FA0442,A123B456C789DEF0"
 ```
 
+#### Mod List Files
+
+Use the `--mod-list-file` option to load mods from a file:
+
+```bash
+node dist/index.js --mod-list-file "path/to/my-mods.json"
+```
+
+**Supported File Formats:**
+- [x] **JSON** - Array of mod objects with optional metadata
+- [x] **Text** - Line-separated mod IDs (one per line)
+- [ ] **CSV** - Comma-separated values (planned)
+
+**JSON Format Example:**
+```json
+[
+  {
+    "modId": "59F0B6EA44FA0442",
+    "name": "My Favorite Mod",
+    "version": "1.0.0",
+    "required": true
+  },
+  {
+    "modId": "A123B456C789DEF0"
+  }
+]
+```
+
+**Text Format Example:**
+```
+59F0B6EA44FA0442
+A123B456C789DEF0
+DEADBEEFDEADBEEF
+```
+
+#### Combining Sources
+
+You can combine both methods - mods from CLI and file will be merged automatically:
+
+```bash
+node dist/index.js --mods "59F0B6EA44FA0442" --mod-list-file "additional-mods.txt"
+```
+
+**Important Notes:**
 - Mod IDs must be 16-character hexadecimal strings
-- Multiple mods are separated by commas
+- Duplicate mod IDs are automatically removed
 - Invalid mod IDs will be ignored with a warning
 - Mod IDs can be copied directly from the Reforger Workshop page for the mod
 

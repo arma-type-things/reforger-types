@@ -4,7 +4,10 @@ import prompts from 'prompts';
 import { 
   createDefaultServerConfig,
   type ServerConfig,
-  type MissionHeader
+  type MissionHeader,
+  type Mod,
+  isValidModId,
+  dedupModList
 } from 'reforger-types';
 import { LayoutManager } from './layout.js';
 import { ConfigValidator } from './validator.js';
@@ -18,6 +21,133 @@ import {
   MissionHeaderStep,
   OutputStep
 } from './wizard-steps.js';
+
+/**
+ * File content types based on file extension
+ */
+enum FileContentType {
+  TEXT = 'text',
+  JSON = 'json',
+  CSV = 'csv'
+}
+
+/**
+ * Determine file content type based on file extension
+ * Defaults to TEXT for unrecognized extensions
+ */
+function getFileContentType(filePath: string): FileContentType {
+  const extension = path.extname(filePath).toLowerCase();
+  
+  switch (extension) {
+    case '.json':
+      return FileContentType.JSON;
+    case '.csv':
+      return FileContentType.CSV;
+    default:
+      return FileContentType.TEXT;
+  }
+}
+
+/**
+ * Parse JSON content for mod list
+ * Returns empty list on parse errors or if no valid mods found
+ */
+function jsonModListParser(content: string): Mod[] {
+  try {
+    const parsed = JSON.parse(content);
+    const mods: Mod[] = [];
+    
+    // Handle array of objects
+    if (Array.isArray(parsed)) {
+      for (const item of parsed) {
+        if (typeof item === 'object' && item !== null && typeof item.modId === 'string') {
+          const mod: Mod = { modId: item.modId };
+          
+          // Only add optional properties if they exist and are valid
+          if (typeof item.name === 'string') mod.name = item.name;
+          if (typeof item.version === 'string') mod.version = item.version;
+          if (typeof item.required === 'boolean') mod.required = item.required;
+          
+          mods.push(mod);
+        }
+      }
+    }
+    // Handle single object
+    else if (typeof parsed === 'object' && parsed !== null && typeof parsed.modId === 'string') {
+      const mod: Mod = { modId: parsed.modId };
+      
+      if (typeof parsed.name === 'string') mod.name = parsed.name;
+      if (typeof parsed.version === 'string') mod.version = parsed.version;
+      if (typeof parsed.required === 'boolean') mod.required = parsed.required;
+      
+      mods.push(mod);
+    }
+    
+    return mods;
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Parse plain text content for mod list
+ * Returns empty list if no valid mod IDs found
+ */
+function textModListParser(content: string): Mod[] {
+  try {
+    const lines = content.split(/\r?\n/)
+      .map(line => line.replace(/\r$/, '').trim())
+      .filter(line => line.length > 0);
+    
+    const mods: Mod[] = [];
+    
+    for (const line of lines) {
+      if (isValidModId(line)) {
+        mods.push({ modId: line.toUpperCase() });
+      }
+    }
+    
+    return mods;
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Parse CSV content for mod list
+ * Returns empty list if no valid mod IDs found
+ */
+function csvModListParser(content: string): Mod[] {
+  // TODO: Implement CSV parsing logic
+  return [];
+}
+
+/**
+ * Load and parse mod list from file
+ * Returns empty list if file cannot be read or parsed
+ */
+function loadModListFromFile(filePath: string): Mod[] {
+  try {
+    if (!fs.existsSync(filePath)) {
+      return [];
+    }
+    
+    const content = fs.readFileSync(filePath, 'utf-8');
+    const fileType = getFileContentType(filePath);
+    
+    switch (fileType) {
+      case FileContentType.JSON:
+        return jsonModListParser(content);
+      case FileContentType.CSV:
+        return csvModListParser(content);
+      case FileContentType.TEXT:
+      default:
+        return textModListParser(content);
+    }
+  } catch {
+    return [];
+  }
+}
 
 export class RedsmithWizard {
   private config: RedsmithConfig = {};
@@ -78,9 +208,23 @@ export class RedsmithWizard {
     serverConfig.publicAddress = this.config.publicAddress;
     serverConfig.publicPort = this.config.bindPort;
 
-    // Add mods if provided
+    // Combine mods from CLI and file sources, then deduplicate
+    const combinedMods: Mod[] = [];
+    
+    // Add mods from CLI
     if (this.config.mods && this.config.mods.length > 0) {
-      serverConfig.game.mods = this.config.mods;
+      combinedMods.push(...this.config.mods);
+    }
+    
+    // Add mods from file
+    if (this.config.modListFile) {
+      const fileMods = loadModListFromFile(this.config.modListFile);
+      combinedMods.push(...fileMods);
+    }
+    
+    // Deduplicate and set final mod list
+    if (combinedMods.length > 0) {
+      serverConfig.game.mods = dedupModList(combinedMods);
     }
 
     // Update mission header - only include fields that are actually provided
