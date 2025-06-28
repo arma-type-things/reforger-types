@@ -11,6 +11,7 @@ import {
   createScenarioId,
   parseScenarioId
 } from '../src/index.js';
+import { ScenarioIdExtended, type ScenarioMetadata } from '../src/scenario/extensions.js';
 
 describe('MissionResourceReference Core Functionality', () => {
   test('should create and serialize correctly', () => {
@@ -282,5 +283,117 @@ describe('Automatic String Conversion', () => {
     const defaultConfig = createDefaultServerConfig('Default Test', OfficialScenarios.CAH_MORTON as any);
     expect(String(defaultConfig.game.scenarioId)).toBe('{2B4183DF23E88249}Missions/CAH_Morton.conf');
     expect(`${defaultConfig.game.scenarioId}`).toBe('{2B4183DF23E88249}Missions/CAH_Morton.conf');
+  });
+});
+
+describe('ScenarioIdExtended Functionality', () => {
+
+  test('should provide scenario mapping functionality', () => {
+    const scenarioMap = ScenarioIdExtended.getScenarioMap();
+    
+    expect(scenarioMap).toBeInstanceOf(Map);
+    expect(scenarioMap.size).toBeGreaterThan(0);
+    
+    // Test that it contains expected scenarios
+    expect(scenarioMap.has('conflict-everon')).toBe(true);
+    expect(scenarioMap.has('conflict-arland')).toBe(true);
+    expect(scenarioMap.has('game-master-everon')).toBe(true);
+  });
+
+  test('should get scenario by friendly code', () => {
+    const scenario = ScenarioIdExtended.fromCode('conflict-everon');
+    
+    expect(scenario).toBeInstanceOf(ScenarioId);
+    expect(scenario?.toString()).toBe('{ECC61978EDCC2B5A}Missions/23_Campaign.conf');
+    
+    // Test case insensitive
+    const scenarioUpper = ScenarioIdExtended.fromCode('CONFLICT-EVERON');
+    expect(scenarioUpper?.toString()).toBe('{ECC61978EDCC2B5A}Missions/23_Campaign.conf');
+  });
+
+  test('should return undefined for unknown codes', () => {
+    const unknown = ScenarioIdExtended.fromCode('unknown-scenario');
+    expect(unknown).toBeUndefined();
+  });
+
+  test('should get all scenarios metadata', () => {
+    const allScenarios = ScenarioIdExtended.getAllScenarios();
+    
+    expect(Array.isArray(allScenarios)).toBe(true);
+    expect(allScenarios.length).toBeGreaterThan(0);
+    
+    // Each scenario should have required metadata properties
+    allScenarios.forEach(scenario => {
+      expect(scenario).toHaveProperty('code');
+      expect(scenario).toHaveProperty('displayName');
+      expect(scenario).toHaveProperty('scenario');
+      expect(scenario).toHaveProperty('key');
+      expect(scenario.scenario).toBeInstanceOf(ScenarioId);
+      expect(typeof scenario.code).toBe('string');
+      expect(typeof scenario.displayName).toBe('string');
+      expect(typeof scenario.key).toBe('string');
+    });
+  });
+
+  test('should get metadata by code', () => {
+    const metadata = ScenarioIdExtended.getMetadata('conflict-everon');
+    
+    expect(metadata).toBeDefined();
+    expect(metadata?.code).toBe('conflict-everon');
+    expect(metadata?.displayName).toBe('Conflict Everon');
+    expect(metadata?.key).toBe('CONFLICT_EVERON');
+    expect(metadata?.scenario).toBeInstanceOf(ScenarioId);
+    expect(metadata?.scenario.toString()).toBe('{ECC61978EDCC2B5A}Missions/23_Campaign.conf');
+  });
+
+  test('should provide backwards compatible mapScenarioName', () => {
+    const scenario = ScenarioIdExtended.mapScenarioName('conflict-arland');
+    
+    expect(scenario).toBeInstanceOf(ScenarioId);
+    expect(scenario?.toString()).toBe('{C41618FD18E9D714}Missions/23_Campaign_Arland.conf');
+    
+    // Test undefined input
+    const undefinedResult = ScenarioIdExtended.mapScenarioName(undefined);
+    expect(undefinedResult).toBeUndefined();
+  });
+
+  test('should handle all official scenarios in metadata', () => {
+    const allScenarios = ScenarioIdExtended.getAllScenarios();
+    const officialScenarioKeys = Object.keys(OfficialScenarios);
+    
+    // Should have metadata for main scenarios (not necessarily all official scenarios)
+    const mainScenarios = [
+      'CONFLICT_EVERON',
+      'CONFLICT_ARLAND', 
+      'COMBAT_OPS_EVERON',
+      'GAME_MASTER_EVERON'
+    ];
+    
+    mainScenarios.forEach(key => {
+      const found = allScenarios.find(s => s.key === key);
+      expect(found).toBeDefined();
+    });
+  });
+
+  test('should maintain scenario map consistency', () => {
+    // Multiple calls should return the same map instance (memoized)
+    const map1 = ScenarioIdExtended.getScenarioMap();
+    const map2 = ScenarioIdExtended.getScenarioMap();
+    
+    expect(map1).toBe(map2); // Same instance
+    
+    // Test that scenarios in metadata match official scenarios
+    const metadata = ScenarioIdExtended.getMetadata('conflict-everon');
+    expect(metadata?.scenario.toString()).toBe(OfficialScenarios.CONFLICT_EVERON.toString());
+  });
+
+  test('should work with case variations', () => {
+    const codes = ['conflict-everon', 'CONFLICT-EVERON', 'Conflict-Everon'];
+    
+    codes.forEach(code => {
+      const scenario = ScenarioIdExtended.fromCode(code);
+      expect(scenario).toBeDefined();
+      expect(scenario?.toString()).toBe('{ECC61978EDCC2B5A}Missions/23_Campaign.conf');
+    });
   });
 });

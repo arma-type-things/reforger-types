@@ -7,13 +7,7 @@ import {
   // Direct exports
   ServerConfigBuilder, 
   createDefaultServerConfig,
-  createDefaultMissionHeader,
-  SupportedPlatform,
-  // Type exports (runtime check)
-  createDefaultGameConfig,
-  createDefaultA2SConfig,
-  createDefaultRconConfig,
-  createDefaultOperatingConfig
+  SupportedPlatform
 } from '../dist/index.js';
 
 describe('ES Module Exports', () => {
@@ -27,15 +21,15 @@ describe('ES Module Exports', () => {
   test('should export direct convenience functions', () => {
     assert.strictEqual(typeof ServerConfigBuilder, 'function');
     assert.strictEqual(typeof createDefaultServerConfig, 'function');
-    assert.strictEqual(typeof createDefaultMissionHeader, 'function');
     assert.strictEqual(typeof SupportedPlatform, 'object');
   });
 
-  test('should export all default creation functions', () => {
-    assert.strictEqual(typeof createDefaultGameConfig, 'function');
-    assert.strictEqual(typeof createDefaultA2SConfig, 'function');
-    assert.strictEqual(typeof createDefaultRconConfig, 'function');
-    assert.strictEqual(typeof createDefaultOperatingConfig, 'function');
+  test('should export all default creation functions in server namespace', () => {
+    assert.strictEqual(typeof server.createDefaultGameConfig, 'function');
+    assert.strictEqual(typeof server.createDefaultA2SConfig, 'function');
+    assert.strictEqual(typeof server.createDefaultRconConfig, 'function');
+    assert.strictEqual(typeof server.createDefaultOperatingConfig, 'function');
+    assert.strictEqual(typeof server.createDefaultMissionHeader, 'function');
   });
 });
 
@@ -281,7 +275,7 @@ describe('High-Level Usage - Functional Approach', () => {
 
 describe('High-Level Usage - Default Values Validation', () => {
   test('should create unbranded mission header', () => {
-    const header = createDefaultMissionHeader();
+    const header = server.createDefaultMissionHeader();
     
     // Validate refactored defaults (no more ATT branding)
     assert.strictEqual(header.m_sName, 'Default Mission');
@@ -290,10 +284,10 @@ describe('High-Level Usage - Default Values Validation', () => {
   });
 
   test('should validate all component defaults', () => {
-    const gameConfig = createDefaultGameConfig('Test Game', 'test-scenario', false);
-    const operatingConfig = createDefaultOperatingConfig();
-    const a2sConfig = createDefaultA2SConfig(2001);
-    const rconConfig = createDefaultRconConfig(2001, 'test-password');
+    const gameConfig = server.createDefaultGameConfig('Test Game', 'test-scenario', false);
+    const operatingConfig = server.createDefaultOperatingConfig();
+    const a2sConfig = server.createDefaultA2SConfig(2001);
+    const rconConfig = server.createDefaultRconConfig(2001, 'test-password');
 
     // Game config defaults
     assert.strictEqual(gameConfig.maxPlayers, 64); // Updated to match wiki default
@@ -315,7 +309,7 @@ describe('High-Level Usage - Default Values Validation', () => {
 
 describe('Cross-Platform Logic Validation', () => {
   test('should handle single platform correctly', () => {
-    const config = createDefaultGameConfig('Single Platform', 'scenario', false);
+    const config = server.createDefaultGameConfig('Single Platform', 'scenario', false);
     
     assert.strictEqual(config.crossPlatform, false);
     assert.strictEqual(config.supportedPlatforms.length, 1);
@@ -323,7 +317,7 @@ describe('Cross-Platform Logic Validation', () => {
   });
 
   test('should handle cross-platform correctly', () => {
-    const config = createDefaultGameConfig('Cross Platform', 'scenario', true);
+    const config = server.createDefaultGameConfig('Cross Platform', 'scenario', true);
     
     assert.strictEqual(config.crossPlatform, true);
     assert.strictEqual(config.supportedPlatforms.length, 3);

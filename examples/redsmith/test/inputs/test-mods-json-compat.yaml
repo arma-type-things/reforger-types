@@ -1,0 +1,13 @@
+[
+  {
+    "modId": "AAAAAAAAAAAAAAAA",
+    "name": "JSON-compatible YAML",
+    "version": "1.0.0",
+    "required": true
+  },
+  {
+    "modId": "BBBBBBBBBBBBBBBB",
+    "name": "Should use JSON parser",
+    "required": false
+  }
+]

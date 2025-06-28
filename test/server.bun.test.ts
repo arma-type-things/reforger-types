@@ -1,14 +1,9 @@
 // Business Logic and Edge Case Tests with Bun
 import { test, expect, describe } from "bun:test";
 import { 
+  server,
   ServerConfigBuilder,
-  SupportedPlatform,
-  createDefaultMissionHeader,
-  createDefaultGameConfig,
-  createDefaultOperatingConfig,
-  createDefaultA2SConfig,
-  createDefaultRconConfig,
-  createDefaultGameProperties
+  SupportedPlatform
 } from '../src/index.js';
 
 describe('Port Allocation Edge Cases', () => {
@@ -34,8 +29,8 @@ describe('Port Allocation Edge Cases', () => {
 
   test('independent port assignment', () => {
     // Test that components can have separate port assignment
-    const a2sConfig = createDefaultA2SConfig(3000);
-    const rconConfig = createDefaultRconConfig(4000, 'password');
+    const a2sConfig = server.createDefaultA2SConfig(3000);
+    const rconConfig = server.createDefaultRconConfig(4000, 'password');
 
     expect(a2sConfig.port).toBe(3001); // Base + 1
     expect(rconConfig.port).toBe(4002); // Base + 2 (not Base + 1)
@@ -45,11 +40,11 @@ describe('Port Allocation Edge Cases', () => {
 describe('Cross-Platform Edge Cases', () => {
   test('platform array consistency', () => {
     // Single platform should always be PC only
-    const singleConfig = createDefaultGameConfig('Single', 'scenario', false);
+    const singleConfig = server.createDefaultGameConfig('Single', 'scenario', false);
     expect(singleConfig.supportedPlatforms).toEqual([SupportedPlatform.PC]);
 
     // Multi-platform should include all platforms in consistent order
-    const multiConfig = createDefaultGameConfig('Multi', 'scenario', true);
+    const multiConfig = server.createDefaultGameConfig('Multi', 'scenario', true);
     expect(multiConfig.supportedPlatforms).toHaveLength(3);
     expect(multiConfig.supportedPlatforms).toContain(SupportedPlatform.PC);
     expect(multiConfig.supportedPlatforms).toContain(SupportedPlatform.XBOX);
@@ -66,7 +61,7 @@ describe('Cross-Platform Edge Cases', () => {
 
 describe('Default Value Edge Cases', () => {
   test('mission header extensibility', () => {
-    const header = createDefaultMissionHeader();
+    const header = server.createDefaultMissionHeader();
 
     // Test that the mission header acts as a proper dictionary
     expect(header.m_sName).toBe('Default Mission');
@@ -84,7 +79,7 @@ describe('Default Value Edge Cases', () => {
   });
 
   test('operating config boundary values', () => {
-    const config = createDefaultOperatingConfig();
+    const config = server.createDefaultOperatingConfig();
 
     // Test AI limit edge case (unlimited)
     expect(config.aiLimit).toBe(-1); // -1 = unlimited
@@ -99,7 +94,7 @@ describe('Default Value Edge Cases', () => {
 
   test('game config player limits', () => {
     // Test default max players is reasonable
-    const defaultConfig = createDefaultGameConfig('Test', 'scenario', false);
+    const defaultConfig = server.createDefaultGameConfig('Test', 'scenario', false);
     expect(defaultConfig.maxPlayers).toBe(64); // Updated to match wiki default
     expect(defaultConfig.maxPlayers).toBeGreaterThan(0);
     expect(defaultConfig.maxPlayers).toBeLessThanOrEqual(256); // Reasonable upper bound
@@ -168,17 +163,99 @@ describe('Configuration Validation Edge Cases', () => {
 
 describe('New Properties from Wiki', () => {
   test('VONCanTransmitCrossFaction defaults correctly', () => {
-    const gameProperties = createDefaultGameProperties();
+    const gameProperties = server.createDefaultGameProperties();
     expect(gameProperties.VONCanTransmitCrossFaction).toBe(false); // Wiki default: false
   });
 
   test('serverMinGrassDistance updated to wiki default', () => {
-    const gameProperties = createDefaultGameProperties();
+    const gameProperties = server.createDefaultGameProperties();
     expect(gameProperties.serverMinGrassDistance).toBe(0); // Wiki default: 0 (updated from 50)
   });
 
   test('serverMaxViewDistance updated to wiki default', () => {
-    const gameProperties = createDefaultGameProperties();
+    const gameProperties = server.createDefaultGameProperties();
     expect(gameProperties.serverMaxViewDistance).toBe(1600); // Wiki default: 1600 (updated from 4000)
+  });
+});
+
+describe('loadServerConfigFromFile', () => {
+  const { loadServerConfigFromFile } = server;
+  
+  test('loads valid JSON server config file', () => {
+    // Create a valid server config object
+    const validConfig = server.createDefaultServerConfig(
+      'Test Server',
+      'MyScenario',
+      '127.0.0.1',
+      2001,
+      true,
+      'testpass'
+    );
+    
+    // Write to temporary file
+    const tempFile = '/tmp/test-server-config.json';
+    const fs = require('fs');
+    fs.writeFileSync(tempFile, JSON.stringify(validConfig, null, 2));
+    
+    // Test loading
+    const result = loadServerConfigFromFile(tempFile);
+    
+    expect(result).toBeDefined();
+    expect(result?.game.name).toBe('Test Server');
+    expect(result?.bindPort).toBe(2001);
+    expect(result?.game.crossPlatform).toBe(true);
+    
+    // Cleanup
+    fs.unlinkSync(tempFile);
+  });
+
+  test('returns undefined for invalid JSON file', () => {
+    // Write invalid JSON to temporary file
+    const tempFile = '/tmp/test-invalid.json';
+    const fs = require('fs');
+    fs.writeFileSync(tempFile, '{ invalid json content');
+    
+    const result = loadServerConfigFromFile(tempFile);
+    
+    expect(result).toBeUndefined();
+    
+    // Cleanup
+    fs.unlinkSync(tempFile);
+  });
+
+  test('returns undefined for non-existent file', () => {
+    const result = loadServerConfigFromFile('/tmp/non-existent-file.json');
+    expect(result).toBeUndefined();
+  });
+
+  test('returns undefined for empty file', () => {
+    // Write empty file
+    const tempFile = '/tmp/test-empty.json';
+    const fs = require('fs');
+    fs.writeFileSync(tempFile, '');
+    
+    const result = loadServerConfigFromFile(tempFile);
+    
+    expect(result).toBeUndefined();
+    
+    // Cleanup
+    fs.unlinkSync(tempFile);
+  });
+
+  test('loads minimal valid JSON object', () => {
+    // Write minimal valid JSON
+    const tempFile = '/tmp/test-minimal.json';
+    const fs = require('fs');
+    const minimalConfig = { game: { name: 'Minimal' }, bindPort: 2001 };
+    fs.writeFileSync(tempFile, JSON.stringify(minimalConfig));
+    
+    const result = loadServerConfigFromFile(tempFile);
+    
+    expect(result).toBeDefined();
+    expect(result?.game.name).toBe('Minimal');
+    expect(result?.bindPort).toBe(2001);
+    
+    // Cleanup
+    fs.unlinkSync(tempFile);
   });
 });

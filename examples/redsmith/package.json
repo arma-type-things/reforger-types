@@ -1,6 +1,6 @@
 {
   "name": "redsmith",
-  "version": "0.0.1-rc1",
+  "version": "0.0.1-rc2",
   "description": "Interactive wizard for forging Arma Reforger server configuration files",
   "type": "module",
   "main": "dist/index.js",
@@ -26,10 +26,12 @@
     "boxen": "^8.0.1",
     "chalk": "5.4.1",
     "commander": "^14.0.0",
+    "js-yaml": "^4.1.0",
     "prompts": "2.4.2",
-    "reforger-types": "^0.0.1-rc1"
+    "reforger-types": "^0.0.1-rc2"
   },
   "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^24.0.4",
     "@types/prompts": "2.4.9",
     "typescript": "^5.0.0"

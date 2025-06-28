@@ -1,0 +1,7 @@
+# YAML file with .yml extension
+- modId: "111111111111111A"
+  name: "YML Extension Mod"
+  
+- modId: "222222222222222B"
+  name: "Another YML Mod"
+  version: "2.1.0"

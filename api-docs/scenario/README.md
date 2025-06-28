@@ -6,6 +6,7 @@ Utilities for transforming between scenario URLs and definitions used in [server
 
 - **[types.md](./types.md)** - Mission resource reference types and classes
 - **[defaults.md](./defaults.md)** - Default scenario creation utilities
+- **[extensions.md](./extensions.md)** - Extended scenario utilities, metadata, and mapping functions
 
 ## Overview
 

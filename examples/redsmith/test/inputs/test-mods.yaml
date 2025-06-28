@@ -1,0 +1,12 @@
+# YAML format with comments and YAML-specific syntax
+- modId: "591AF5BDA9F7CE8B"
+  name: "YAML Mod One"
+  version: "1.0.0"
+  required: true
+  
+- modId: "5A5A5A5A5A5A5A5A"
+  name: "YAML Mod Two"
+  required: false
+
+- modId: "DEADBEEFDEADBEEF"
+  # This mod has no additional properties

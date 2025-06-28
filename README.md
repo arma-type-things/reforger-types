@@ -11,11 +11,12 @@ npm install reforger-types
 ## Examples
 
 See the [examples folder](./examples) for complete implementations:
-- **[Redsmith](./examples/redsmith/)** - Interactive wizard and validation tool for server configs (also available via `npx redsmith`)
+- **[Redsmith](./examples/redsmith/)** - Interactive wizard and validation tool for server configs
 - **[Discord Bot](./examples/discord-bot/)** - Slash commands for server configuration  
 - **[Config Validator](./examples/config-validator/)** - Focused example demonstrating direct validation API usage
 - **[Parser Example](./examples/parser-example.js)** - Configuration parsing and validation
 - **[Mod Extensions Example](./examples/mod-extensions-example.js)** - Workshop URL and mod utilities
+- **[Mod Conversion Example](./examples/mod-conversion-example.js)** - URL-to-mod conversion and extended mod utilities
 
 ## Quick Start
 
@@ -74,18 +75,17 @@ const customResult = parse(configObject, {
 
 ### CLI Validation
 
-For quick config validation from the command line:
+For command-line validation:
 
 ```bash
-# Install redsmith globally
-npm install -g redsmith
-
-# Validate any config file
-redsmith validate path/to/server.json
+# Using redsmith for validation
+npx redsmith validate path/to/server.json
 
 # With debug output
-redsmith validate path/to/server.json --debug
+npx redsmith validate path/to/server.json --debug
 ```
+
+Redsmith can also be installed globally with `npm install -g redsmith`, though this project recommends using `npx` for better dependency management.
 
 ## API Documentation
 
@@ -134,4 +134,4 @@ npm run build    # Compile TypeScript
 npm test         # Run all tests (Node.js + Bun + integration)
 ```
 
-Requires Node.js 22+ and Bun for testing.
+Requires Node.js 22+. Bun required for complete test suite.

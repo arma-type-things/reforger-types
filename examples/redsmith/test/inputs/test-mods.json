@@ -1,0 +1,17 @@
+[
+  {
+    "modId": "591AF5BDA9F7CE8B",
+    "name": "Enhanced Movement",
+    "version": "1.2.0",
+    "required": true
+  },
+  {
+    "modId": "5A5A5A5A5A5A5A5A",
+    "name": "Custom Weapons Pack",
+    "version": "2.1.5"
+  },
+  {
+    "modId": "DEADBEEFDEADBEEF",
+    "name": "Terrain Mod"
+  }
+]

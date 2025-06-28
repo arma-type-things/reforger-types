@@ -10,14 +10,8 @@ export { server, scenario, parser };
 // Re-export for convenience
 export const SupportedPlatform = server.SupportedPlatform;
 
-// Export default initializer functions for convenience
+// Export main server config creation function
 export const createDefaultServerConfig = server.createDefaultServerConfig;
-export const createDefaultGameConfig = server.createDefaultGameConfig;
-export const createDefaultGameProperties = server.createDefaultGameProperties;
-export const createDefaultOperatingConfig = server.createDefaultOperatingConfig;
-export const createDefaultA2SConfig = server.createDefaultA2SConfig;
-export const createDefaultRconConfig = server.createDefaultRconConfig;
-export const createDefaultMissionHeader = server.createDefaultMissionHeader;
 
 // Export builder pattern classes
 export const ServerConfigBuilder = server.ServerConfigBuilder;
@@ -39,6 +33,8 @@ export const createModExtendedListFromUrls = server.createModExtendedListFromUrl
 export const createModListFromUrls = server.createModListFromUrls;
 export const toBaseMod = server.toBaseMod;
 export const toBaseModList = server.toBaseModList;
+export const dedupModList = server.dedupModList;
+export const loadServerConfigFromFile = server.loadServerConfigFromFile;
 export const WORKSHOP_BASE_URL = server.WORKSHOP_BASE_URL;
 
 // Type-only exports for TypeScript users
@@ -60,6 +56,7 @@ export type ParserError = parser.ParserError;
 // Export scenario utilities for convenience
 export const MissionResourceReference = scenario.MissionResourceReference;
 export const ScenarioId = scenario.ScenarioId;
+export const ScenarioIdExtended = scenario.ScenarioIdExtended;
 export const OfficialScenarios = scenario.OfficialScenarios;
 export const createDefaultScenarioId = scenario.createDefaultScenarioId;
 export const createScenarioId = scenario.createScenarioId;
@@ -69,3 +66,4 @@ export const parseScenarioId = scenario.parseScenarioId;
 export type MissionResourceId = scenario.MissionResourceId;
 export type MissionPath = scenario.MissionPath;
 export type OfficialScenarioName = scenario.OfficialScenarioName;
+export type ScenarioMetadata = scenario.ScenarioMetadata;

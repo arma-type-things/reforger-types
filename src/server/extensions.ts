@@ -2,7 +2,8 @@
  * Extensions for server types that add computed properties and helper methods
  */
 
-import { Mod as BaseMod } from './types';
+import * as fs from 'fs';
+import { Mod as BaseMod, ServerConfig } from './types';
 
 /**
  * Base URL for the Arma Reforger Workshop
@@ -203,4 +204,38 @@ export function toBaseMod(modExtended: ModExtended): BaseMod {
  */
 export function toBaseModList(modsExtended: ModExtended[]): BaseMod[] {
   return modsExtended.map(mod => toBaseMod(mod));
+}
+
+/**
+ * Deduplicates a list of mods by their modId (hex ID)
+ * Keeps the first occurrence of each modId
+ * @param mods - Array of mod objects to deduplicate
+ * @returns Array of mods with duplicates removed
+ */
+export function dedupModList<T extends { modId: string }>(mods: T[]): T[] {
+  const seen = new Set<string>();
+  const result: T[] = [];
+  
+  for (const mod of mods) {
+    if (!seen.has(mod.modId)) {
+      seen.add(mod.modId);
+      result.push(mod);
+    }
+  }
+  
+  return result;
+}
+
+/**
+ * Loads and parses a server configuration from a JSON file
+ * @param filePath - Absolute path to the server configuration file
+ * @returns Parsed ServerConfig object, or undefined if file cannot be read or parsed
+ */
+export function loadServerConfigFromFile(filePath: string): ServerConfig | undefined {
+  try {
+    const content = fs.readFileSync(filePath, 'utf-8');
+    return JSON.parse(content) as ServerConfig;
+  } catch {
+    return undefined;
+  }
 }

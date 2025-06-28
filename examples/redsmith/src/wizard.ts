@@ -1,21 +1,48 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import * as yaml from 'js-yaml';
 import prompts from 'prompts';
 import { 
   createDefaultServerConfig,
   type ServerConfig,
-  type MissionHeader
+  type MissionHeader,
+  type Mod,
+  isValidModId,
+  dedupModList
 } from 'reforger-types';
 import { LayoutManager } from './layout.js';
+import { ConfigValidator } from './validator.js';
+import { FileContentType, getFileContentTypeFromExtension } from './types.js';
+import { parseModListByType } from './file-utils.js';
 import { 
   type RedsmithConfig, 
   type WizardStep,
   ServerNameStep,
   NetworkStep,
+  CrossPlayStep,
   ScenarioStep,
   MissionHeaderStep,
   OutputStep
 } from './wizard-steps.js';
+
+/**
+ * Load and parse mod list from file
+ * Returns empty list if file cannot be read or parsed
+ */
+function loadModListFromFile(filePath: string): Mod[] {
+  try {
+    if (!fs.existsSync(filePath)) {
+      return [];
+    }
+    
+    const content = fs.readFileSync(filePath, 'utf-8');
+    const fileType = getFileContentTypeFromExtension(filePath);
+    
+    return parseModListByType(content, fileType);
+  } catch {
+    return [];
+  }
+}
 
 export class RedsmithWizard {
   private config: RedsmithConfig = {};
@@ -30,8 +57,9 @@ export class RedsmithWizard {
     this.steps = [
       new ServerNameStep(),
       new NetworkStep(),
+      new CrossPlayStep(),
       new ScenarioStep(),
-      new MissionHeaderStep(),
+      // new MissionHeaderStep(), // Disabled for now - mission header fields are optional
       new OutputStep()
     ];
   }
@@ -67,7 +95,7 @@ export class RedsmithWizard {
       this.config.scenarioId,
       this.config.bindAddress,
       this.config.bindPort,
-      false, // crossPlatform - keeping simple for now
+      this.config.crossPlatform ?? true, // Default to true for redsmith
       '' // rconPassword - keeping empty for now
     );
 
@@ -75,18 +103,48 @@ export class RedsmithWizard {
     serverConfig.publicAddress = this.config.publicAddress;
     serverConfig.publicPort = this.config.bindPort;
 
-    // Update mission header
-    const missionHeader: MissionHeader = {
-      m_sName: this.config.missionName || 'Default Mission',
-      m_sAuthor: this.config.missionAuthor || 'Default Author',
-      m_sSaveFileName: this.config.saveFileName || 'defaultSave'
-    };
+    // Combine mods from CLI and file sources, then deduplicate
+    const combinedMods: Mod[] = [];
+    
+    // Add mods from CLI
+    if (this.config.mods && this.config.mods.length > 0) {
+      combinedMods.push(...this.config.mods);
+    }
+    
+    // Add mods from file
+    if (this.config.modListFile) {
+      const fileMods = loadModListFromFile(this.config.modListFile);
+      combinedMods.push(...fileMods);
+    }
+    
+    // Deduplicate and set final mod list
+    if (combinedMods.length > 0) {
+      serverConfig.game.mods = dedupModList(combinedMods);
+    }
+
+    // Update mission header - only include fields that are actually provided
+    const missionHeader: MissionHeader = {};
+    if (this.config.missionName) {
+      missionHeader.m_sName = this.config.missionName;
+    }
+    if (this.config.missionAuthor) {
+      missionHeader.m_sAuthor = this.config.missionAuthor;
+    }
+    if (this.config.saveFileName) {
+      missionHeader.m_sSaveFileName = this.config.saveFileName;
+    }
     serverConfig.game.gameProperties.missionHeader = missionHeader;
 
     return serverConfig;
   }
 
-  private async saveConfig(config: ServerConfig, outputPath: string): Promise<void> {
+  private async saveConfig(config: ServerConfig, outputPath: string, force: boolean = false): Promise<void> {
+    // Check if file already exists - only block if force is not enabled
+    const fileExists = fs.existsSync(outputPath);
+    if (fileExists && !force) {
+      throw new Error(`Refusing to overwrite existing file: ${outputPath} (use --force to override)`);
+    }
+    
     const configJson = JSON.stringify(config, null, 2);
     
     try {
@@ -104,7 +162,12 @@ export class RedsmithWizard {
     }
   }
 
-  private displaySummary(config: ServerConfig, outputPath: string): void {
+  private outputToStdout(config: ServerConfig): void {
+    const configJson = JSON.stringify(config, null, 2);
+    console.log(configJson);
+  }
+
+  private displaySummary(config: ServerConfig, outputPath?: string): void {
     this.layout.printLine();
     this.layout.printSectionHeader('Configuration Summary');
     this.layout.printLine();
@@ -115,11 +178,69 @@ export class RedsmithWizard {
     this.layout.printLabelValue('Public Port: ', config.publicPort.toString());
     this.layout.printLabelValue('A2S Port: ', config.a2s.port.toString());
     this.layout.printLabelValue('RCON Port: ', config.rcon.port.toString());
-    this.layout.printLabelValue('Mission Name: ', String(config.game.gameProperties.missionHeader.m_sName));
-    this.layout.printLabelValue('Mission Author: ', String(config.game.gameProperties.missionHeader.m_sAuthor));
-    this.layout.printLabelValue('Save File: ', String(config.game.gameProperties.missionHeader.m_sSaveFileName));
-    this.layout.printLabelValue('Output Path: ', path.resolve(outputPath));
+    this.layout.printLabelValue('Cross-Platform: ', config.game.crossPlatform ? 'Enabled' : 'Disabled');
+    
+    // Show mission header fields only if they exist
+    if (config.game.gameProperties.missionHeader.m_sName) {
+      this.layout.printLabelValue('Mission Name: ', String(config.game.gameProperties.missionHeader.m_sName));
+    }
+    if (config.game.gameProperties.missionHeader.m_sAuthor) {
+      this.layout.printLabelValue('Mission Author: ', String(config.game.gameProperties.missionHeader.m_sAuthor));
+    }
+    if (config.game.gameProperties.missionHeader.m_sSaveFileName) {
+      this.layout.printLabelValue('Save File: ', String(config.game.gameProperties.missionHeader.m_sSaveFileName));
+    }
+    
+    if (outputPath) {
+      this.layout.printLabelValue('Output Path: ', path.resolve(outputPath));
+    } else {
+      this.layout.printLabelValue('Output: ', 'stdout');
+    }
     this.layout.printLine();
+  }
+
+  private async validateConfig(configPath: string): Promise<void> {
+    this.layout.printLine();
+    this.layout.printSectionHeader('🔍 Validation Results');
+    
+    try {
+      const validator = new ConfigValidator();
+      const result = await validator.validateFile(configPath);
+      validator.displayResults(result, configPath);
+      
+      // If there are errors, exit with error code
+      if (result.hasErrors) {
+        process.exit(1);
+      }
+    } catch (error) {
+      this.layout.printError('Validation failed: ' + String(error));
+      process.exit(1);
+    }
+  }
+
+  private async handleConfirmationResult(confirm: { proceed?: boolean }, config: ServerConfig): Promise<void> {
+    if (confirm.proceed === undefined) {
+      process.exit(0); // User cancelled (Ctrl+C)
+    }
+
+    if (confirm.proceed) {
+      if (this.config.stdout) {
+        // Output to stdout instead of file
+        this.outputToStdout(config);
+      } else {
+        // Normal file output
+        await this.saveConfig(config, this.config.outputPath!, this.config.force || false);
+        
+        // Run validation if requested (only for file output)
+        if (this.config.validate) {
+          await this.validateConfig(this.config.outputPath!);
+        }
+        
+        this.layout.printSuccessBox('🎉 Server configuration forged successfully by Redsmith!');
+      }
+    } else {
+      this.layout.print('\n❌ Configuration not forged.', 'errorColor');
+    }
   }
 
   async run(): Promise<void> {
@@ -130,25 +251,24 @@ export class RedsmithWizard {
 
       const config = await this.generateConfig();
       
-      this.displaySummary(config, this.config.outputPath!);
+      this.displaySummary(config, this.config.stdout ? undefined : this.config.outputPath!);
       
-      const confirm = await prompts({
-        type: 'confirm',
-        name: 'proceed',
-        message: 'Forge this configuration?',
-        initial: false
-      });
-
-      if (confirm.proceed === undefined) {
-        process.exit(0); // User cancelled (Ctrl+C)
-      }
-
-      if (confirm.proceed) {
-        await this.saveConfig(config, this.config.outputPath!);
-        this.layout.printSuccessBox('🎉 Server configuration forged successfully by Redsmith!');
+      let confirm: { proceed?: boolean };
+      
+      if (this.config.yes || this.config.force || this.config.validate) {
+        // Skip confirmation when --yes, --force, or --validate flag is set
+        confirm = { proceed: true };
       } else {
-        this.layout.print('\n❌ Configuration not forged.', 'errorColor');
+        // Normal confirmation flow
+        confirm = await prompts({
+          type: 'confirm',
+          name: 'proceed',
+          message: 'Forge this configuration?',
+          initial: false
+        });
       }
+
+      await this.handleConfirmationResult(confirm, config);
 
     } catch (error) {
       this.layout.printError('\n' + String(error));

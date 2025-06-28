@@ -162,6 +162,26 @@ function getEffectiveModName(mod: BaseMod): string
 
 **Default name format:** `"Mod {last8chars}"` using the last 8 characters of the mod ID
 
+## Configuration File Utilities
+
+### loadServerConfigFromFile
+
+Loads and parses a ServerConfig from a JSON file, returning undefined on error.
+
+```typescript
+function loadServerConfigFromFile(filePath: string): ServerConfig | undefined
+```
+
+**Parameters:**
+- `filePath` - Path to the JSON file containing server configuration
+
+**Returns:** Parsed `ServerConfig` object, or `undefined` if file cannot be read or parsed
+
+**Error handling:** Function handles all errors gracefully, returning `undefined` for:
+- File not found or not readable
+- Invalid JSON format
+- JSON that doesn't match ServerConfig structure
+
 ## Conversion Utilities
 
 ### toBaseMod
@@ -257,4 +277,24 @@ const modWithoutName = { modId: '1234567890ABCDEF' };
 
 console.log(getEffectiveModName(modWithName));    // "Custom Name"
 console.log(getEffectiveModName(modWithoutName)); // "Mod 90ABCDEF"
+```
+
+### Loading Server Configuration from File
+
+```typescript
+import { loadServerConfigFromFile } from 'reforger-types';
+
+// Load server configuration from JSON file
+const config = loadServerConfigFromFile('/path/to/server.json');
+
+if (config) {
+  console.log('Server name:', config.game?.name || 'Unnamed Server');
+  console.log('Max players:', config.game?.maxPlayers || 16);
+  console.log('Mods loaded:', config.game?.mods?.length || 0);
+} else {
+  console.log('Failed to load or parse server configuration');
+}
+
+// Safe to use in conditional chains
+const serverName = loadServerConfigFromFile('./server.json')?.game?.name;
 ```

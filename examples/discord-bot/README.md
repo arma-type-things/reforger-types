@@ -14,7 +14,7 @@ A TypeScript Discord bot that allows users to create Arma Reforger server config
 
 1. Install dependencies:
 ```bash
-npm install discord.js @types/node dotenv
+npm install
 ```
 
 2. Create a `.env` file:
@@ -26,7 +26,7 @@ CONFIG_OUTPUT_DIR=./server-configs
 
 3. Build and run:
 ```bash
-npx tsc
+npm run build
 node dist/bot.js
 ```
 

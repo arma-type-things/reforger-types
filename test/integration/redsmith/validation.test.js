@@ -24,6 +24,7 @@ import { existsSync } from 'fs';
 import { execSync } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { REDSMITH_DIST_PATH, REDSMITH_SRC_PATH, CONFIG_VALIDATOR_CONFIGS } from './references.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -31,7 +32,7 @@ const __dirname = path.dirname(__filename);
 console.log('🧪 Testing redsmith validation features...');
 
 async function testValidation() {
-  const redsmithPath = path.join(__dirname, '../../examples/redsmith/dist/index.js');
+  const redsmithPath = REDSMITH_DIST_PATH;
   
   console.log('\n🔍 Checking if redsmith is built...');
   if (!existsSync(redsmithPath)) {
@@ -43,7 +44,7 @@ async function testValidation() {
   console.log('✅ Redsmith found at:', redsmithPath);
   
   // Check the source code for validation methods
-  const sourcePath = path.join(__dirname, '../../examples/redsmith/src');
+  const sourcePath = REDSMITH_SRC_PATH;
   const requiredFiles = [
     'index.ts',
     'wizard.ts', 
@@ -71,7 +72,7 @@ async function testValidation() {
   
   // Test validate sub-command with valid config
   console.log('\n🔍 Testing validate sub-command with valid config...');
-  const validConfigPath = path.join(__dirname, '../../examples/config-validator/configs/valid-server.json');
+  const validConfigPath = CONFIG_VALIDATOR_CONFIGS.VALID;
   
   try {
     const output = execSync(`node "${redsmithPath}" validate "${validConfigPath}"`, {
@@ -92,7 +93,7 @@ async function testValidation() {
   
   // Test validate sub-command with problematic config
   console.log('\n🔍 Testing validate sub-command with problematic config...');
-  const problematicConfigPath = path.join(__dirname, '../../examples/config-validator/configs/problematic-server.json');
+  const problematicConfigPath = CONFIG_VALIDATOR_CONFIGS.PROBLEMATIC;
   
   try {
     execSync(`node "${redsmithPath}" validate "${problematicConfigPath}"`, {

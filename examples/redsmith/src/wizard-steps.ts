@@ -1,6 +1,6 @@
 import prompts from 'prompts';
 import * as path from 'path';
-import { OfficialScenarios, type OfficialScenarioName } from 'reforger-types';
+import { OfficialScenarios, type OfficialScenarioName, type Mod } from 'reforger-types';
 import { LayoutManager } from './layout.js';
 
 // Configuration holder interface
@@ -14,6 +14,13 @@ export interface RedsmithConfig {
   missionAuthor?: string;
   saveFileName?: string;
   outputPath?: string;
+  mods?: Mod[];
+  modListFile?: string;
+  crossPlatform?: boolean;
+  yes?: boolean;
+  force?: boolean;
+  validate?: boolean;
+  stdout?: boolean;
 }
 
 // Interface for wizard steps
@@ -29,6 +36,12 @@ export abstract class BaseWizardStep implements WizardStep {
 
   abstract execute(config: RedsmithConfig, layout: LayoutManager): Promise<void>;
   abstract isRequired(config: RedsmithConfig): boolean;
+
+  protected handleUndefinedResponse(): never {
+    // Central place for handling user cancellation (Ctrl+C)
+    // Can be extended to add cleanup behaviors, logging, etc.
+    process.exit(0);
+  }
 
   protected async promptString(question: string, defaultValue: string = ''): Promise<string> {
     const response = await prompts({
@@ -52,7 +65,7 @@ export abstract class BaseWizardStep implements WizardStep {
     });
     
     if (response.value === undefined) {
-      process.exit(0); // User cancelled (Ctrl+C)
+      this.handleUndefinedResponse();
     }
     
     return response.value?.trim() || defaultValue;
@@ -95,7 +108,7 @@ export abstract class BaseWizardStep implements WizardStep {
     });
     
     if (response.value === undefined) {
-      process.exit(0); // User cancelled (Ctrl+C)
+      this.handleUndefinedResponse();
     }
     
     return response.value?.trim() || defaultValue;
@@ -130,36 +143,58 @@ export abstract class BaseWizardStep implements WizardStep {
     });
     
     if (response.value === undefined) {
-      process.exit(0); // User cancelled (Ctrl+C)
+      this.handleUndefinedResponse();
     }
     
     return response.value?.trim() || defaultValue;
   }
 
-  protected async promptNumber(question: string, defaultValue: number, min?: number, max?: number): Promise<number> {
+  protected async promptNumber(
+    question: string, 
+    defaultValue: number, 
+    min?: number, 
+    max?: number
+  ): Promise<number> {
+    // Use text input instead of number to handle default values properly
     const response = await prompts({
-      type: 'number',
+      type: 'text',
       name: 'value',
       message: question,
-      initial: defaultValue,
-      min,
-      max,
-      validate: (value: number) => {
-        if (min !== undefined && value < min) {
+      initial: defaultValue.toString(),
+      validate: (value: string) => {
+        // If empty string, user hit enter - this is valid (will use default)
+        if (value.trim() === '') {
+          return true;
+        }
+        
+        // Parse the entered value
+        const numValue = parseInt(value.trim(), 10);
+        if (isNaN(numValue)) {
+          return 'Please enter a valid number';
+        }
+        
+        if (min !== undefined && numValue < min) {
           return `Value must be at least ${min}`;
         }
-        if (max !== undefined && value > max) {
+        if (max !== undefined && numValue > max) {
           return `Value must be at most ${max}`;
         }
         return true;
       }
     });
     
+    // Handle cancellation (Ctrl+C)
     if (response.value === undefined) {
-      process.exit(0); // User cancelled (Ctrl+C)
+      this.handleUndefinedResponse();
     }
     
-    return response.value ?? defaultValue;
+    // If empty string (user hit enter), use default value
+    if (response.value.trim() === '') {
+      return defaultValue;
+    }
+    
+    // Parse and return the entered value
+    return parseInt(response.value.trim(), 10);
   }
 
   protected async promptChoice(question: string, options: string[], defaultIndex: number = 0): Promise<number> {
@@ -177,7 +212,7 @@ export abstract class BaseWizardStep implements WizardStep {
     });
     
     if (response.value === undefined) {
-      process.exit(0); // User cancelled (Ctrl+C)
+      this.handleUndefinedResponse();
     }
     
     return response.value;
@@ -216,6 +251,32 @@ export class NetworkStep extends BaseWizardStep {
     if (!config.bindPort) {
       config.bindPort = await this.promptNumber('Bind port (main server port)', 2001, 1024, 65535);
     }
+    layout.printLine();
+  }
+}
+
+export class CrossPlayStep extends BaseWizardStep {
+  constructor() { super('Cross-Platform Settings'); }
+
+  isRequired(config: RedsmithConfig): boolean {
+    return config.crossPlatform === undefined;
+  }
+
+  async execute(config: RedsmithConfig, layout: LayoutManager): Promise<void> {
+    layout.printSectionHeader('🎮 Cross-Platform Settings');
+    
+    const response = await prompts({
+      type: 'confirm',
+      name: 'crossPlatform',
+      message: 'Enable cross-platform play (PC + Console)?',
+      initial: true
+    });
+    
+    if (response.crossPlatform === undefined) {
+      this.handleUndefinedResponse();
+    }
+    
+    config.crossPlatform = response.crossPlatform;
     layout.printLine();
   }
 }
@@ -282,7 +343,8 @@ export class OutputStep extends BaseWizardStep {
   constructor() { super('Output Configuration'); }
 
   isRequired(config: RedsmithConfig): boolean {
-    return !config.outputPath;
+    // Skip if stdout mode is enabled or if outputPath is already provided
+    return !config.outputPath && !config.stdout;
   }
 
   async execute(config: RedsmithConfig, layout: LayoutManager): Promise<void> {
