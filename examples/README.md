@@ -5,15 +5,15 @@ This directory contains example projects that demonstrate how to use the reforge
 ## 📁 Examples
 
 ### [redsmith](./redsmith/) ⭐ **Full-Featured Tool**
-An interactive wizard for creating and validating Arma Reforger server configuration files. Now available as a published npm package.
+An interactive wizard for creating and validating Arma Reforger server configuration files.
 
 **Features:**
 - Interactive wizard for server configuration creation
 - Built-in configuration validation with `redsmith validate <file>`
 - Enhanced input validation for all prompts
-- Released as installable npm package
+- Available as npm package
 
-**Released Package:**
+**Installation:**
 - Install globally: `npm install -g redsmith`
 - Run without installing: `npx redsmith`
 - Use in projects: `npm install redsmith`
@@ -29,7 +29,7 @@ npm start
 **Validation:**
 ```bash
 # Validate any config file
-redsmith validate path/to/server.json
+npx redsmith validate path/to/server.json
 ```
 
 ### [config-validator](./config-validator/) 📚 **Focused Example**

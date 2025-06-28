@@ -1,36 +1,6 @@
 # Redsmith
 
-An interactive forge for crafting Arm- `--scenario <scenario>` - Scenario name (see supported scenarios below)
-- `--mission-name <n>` - Mission name
-- `--mission-author <author>` - Mission author
-- `--save-file <filename>` - Save file name
-- `--mods <mods>` - Comma-separated list of mod IDs (16-character hex strings)
-- `--output <path>` - Output file path
-- `--yes` - Skip confirmation prompt and proceed automatically
-- `--force` - Allow overwriting existing files and skip confirmation
-- `--validate` - Run validation after saving the configuration file
-
-### Non-Interactive Mode
-
-Use `--yes` for automated scripting:
-
-```bash
-node dist/index.js --name "Auto Server" --scenario conflict-everon --port 2001 --output server.json --yes
-```
-
-Use `--force` to overwrite existing files:
-
-```bash
-node dist/index.js --output existing-file.json --force --yes
-```
-
-Use `--validate` to immediately validate the generated configuration:
-
-```bash
-node dist/index.js --name "Test Server" --scenario conflict-everon --port 2001 --validate
-```rger server configuration files.
-
-*Redsmith* - a portmanteau of "Reforger" and "blacksmith" - helps you forge perfect server configurations through an intuitive command-line interface.
+An interactive forge for crafting Arma Reforger server configuration files.
 
 ## Features
 
@@ -40,6 +10,7 @@ node dist/index.js --name "Test Server" --scenario conflict-everon --port 2001 -
 - Mission header customization
 - Simple numbered menu selection
 - Default value suggestions
+- Built-in validation with detailed reporting
 
 ## Installation
 
@@ -157,7 +128,20 @@ The wizard generates a complete `server.json` file that can be used directly wit
 - Combat Ops (Arland, Everon)
 - Game Master (Everon, Arland)
 
+## Validation
+
+Redsmith includes built-in validation capabilities:
+
+```bash
+# Validate any configuration file
+npx redsmith validate path/to/server.json
+
+# With debug output for troubleshooting
+npx redsmith validate path/to/server.json --debug
+```
+
 ## Requirements
 
-- Node.js 18.0.0 or higher
+- Node.js 22+ for optimal compatibility
 - reforger-types library
+
