@@ -24,7 +24,8 @@ export const TEST_FILES = {
   CSV_MINIMAL_MODS: path.join(REDSMITH_TEST_INPUTS, 'test-mods-minimal.csv'),
   YAML_MODS: path.join(REDSMITH_TEST_INPUTS, 'test-mods.yaml'),
   YML_MODS: path.join(REDSMITH_TEST_INPUTS, 'test-mods.yml'),
-  JSON_COMPAT_YAML_MODS: path.join(REDSMITH_TEST_INPUTS, 'test-mods-json-compat.yaml')
+  JSON_COMPAT_YAML_MODS: path.join(REDSMITH_TEST_INPUTS, 'test-mods-json-compat.yaml'),
+  SERVER_CONFIG: path.join(REDSMITH_TEST_INPUTS, 'test-serverconfig.json')
 };
 
 // Config validator test files
