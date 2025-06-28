@@ -1,216 +1,100 @@
 # Redsmith
 
-An interactive forge for crafting Arma Reforger server configuration files.
+Generate, automate, and validate Arma Reforger server configuration files with an interactive wizard or command-line tools.
 
-## Features
+## Quick Start
 
-- Interactive step-by-step configuration
-- Support for official scenarios
-- Automatic port calculation (A2S and RCON)
-- Mission header customization
-- Simple numbered menu selection
-- Default value suggestions
-- Built-in validation with detailed reporting
-
-## Installation
+**No installation required** - run directly with npx:
 
 ```bash
-npm install
-npm run build
+npx redsmith
 ```
+
+*Note: Requires Node.js to be installed on your system.*
 
 ## Usage
 
-### Interactive Mode
+### Interactive Wizard
+
+As above, run without any options to start the interactive wizard:
 
 ```bash
-npm start
+npx redsmith
 ```
 
-Or run directly:
+The wizard will guide you through creating a complete server configuration file.
+
+### Command Line
+
+Generate configurations directly with command-line options:
 
 ```bash
-node dist/index.js
+npx redsmith --name "My Server" --scenario conflict-everon --port 2001 --output-file server.json --yes
 ```
 
-### Command Line Options
+### Common Options
 
-You can pre-fill configuration values using command line options:
-
-```bash
-node dist/index.js --name "My Server" --scenario conflict-everon --port 2001
-```
-
-Available options:
 - `--name <name>` - Server name
-- `--bind-address <address>` - Bind IP address
-- `--public-address <address>` - Public IP address
-- `--port <port>` - Bind port number
-- `--scenario <scenario>` - Scenario name (see supported scenarios below)
-- `--mission-name <name>` - Mission name
-- `--mission-author <author>` - Mission author
-- `--save-file <filename>` - Save file name
-- `--mods <mods>` - Comma-separated list of mod IDs (16-character hex strings)
-- `--mod-list-file <path>` - Path to file containing mod IDs (supports JSON, YAML, text, and CSV formats)
-- `--output <path>` - Output file path
-- `--yes` - Skip confirmation prompt and proceed automatically
-- `--force` - Allow overwriting existing files and skip confirmation
-- `--validate` - Run validation after saving the configuration file
+- `--scenario <scenario>` - Scenario (use `npx redsmith list-scenarios` to see options)
+- `--port <port>` - Server port
+- `--output-file <path>` - Where to save the configuration
+- `--yes` - Skip confirmations for automation
+- `--validate` - Validate the generated configuration
 
-### Non-Interactive Mode
+### Examples
 
-Use `--yes` for automated scripting:
-
+**Create a basic server:**
 ```bash
-node dist/index.js --name "Auto Server" --scenario conflict-everon --port 2001 --output server.json --yes
+npx redsmith --name "Weekend Warriors" --scenario conflict-everon --port 2001 --output-file server.json --yes
 ```
 
-Use `--force` to overwrite existing files:
-
+**Server with mods:**
 ```bash
-node dist/index.js --output existing-file.json --force --yes
+npx redsmith --name "Modded Server" --scenario conflict-everon --mods "59F0B6EA44FA0442,A123B456C789DEF0" --output-file server.json --yes
 ```
 
-Use `--validate` to immediately validate the generated configuration:
-
+**Load mods from file:**
 ```bash
-node dist/index.js --name "Test Server" --scenario conflict-everon --port 2001 --validate
+npx redsmith --name "Community Server" --mod-list-file my-mods.txt --output-file server.json --yes
 ```
 
-### Discovering Available Scenarios
-
-Use the `list-scenarios` command to see all supported scenario codes:
-
+**Validate existing configuration:**
 ```bash
-node dist/index.js list-scenarios
+npx redsmith validate server.json
 ```
 
-### Mod Support
+## Mod Support
 
-You can specify mods to load on your server in two ways:
+Redsmith supports loading mods in multiple ways:
 
-#### Command Line Mods
+**Command line:** `--mods "modid1,modid2"`  
+**From file:** `--mod-list-file mods.txt`
 
-Use the `--mods` option for a quick list of mod IDs:
-
-```bash
-node dist/index.js --mods "59F0B6EA44FA0442,A123B456C789DEF0"
-```
-
-#### Mod List Files
-
-Use the `--mod-list-file` option to load mods from a file:
-
-```bash
-node dist/index.js --mod-list-file "path/to/my-mods.json"
-```
-
-**Supported File Formats:**
-- [x] **JSON** - Array of mod objects with optional metadata
-- [x] **YAML** - YAML format with optional metadata (supports both .yaml and .yml extensions)
-- [x] **Text** - Line-separated mod IDs (one per line)
-- [x] **CSV** - Comma-separated values with headers
-
-**JSON Format Example:**
-```json
-[
-  {
-    "modId": "59F0B6EA44FA0442",
-    "name": "My Favorite Mod",
-    "version": "1.0.0",
-    "required": true
-  },
-  {
-    "modId": "A123B456C789DEF0"
-  }
-]
-```
-
-**YAML Format Example:**
-```yaml
-- modId: "59F0B6EA44FA0442"
-  name: "My Favorite Mod"
-  version: "1.0.0"
-  required: true
-  
-- modId: "A123B456C789DEF0"
-  # This mod has minimal metadata
-```
-
-**Text Format Example:**
+**Example mod list file (mods.txt):**
 ```
 59F0B6EA44FA0442
 A123B456C789DEF0
 DEADBEEFDEADBEEF
 ```
 
-**CSV Format Example:**
-```csv
-modId,name,version,required
-59F0B6EA44FA0442,My Favorite Mod,1.0.0,true
-A123B456C789DEF0,Another Great Mod,2.1.0,false
-DEADBEEFDEADBEEF,Essential Mod,,true
-```
+## Extract Mods from Existing Config
 
-#### Combining Sources
-
-You can combine both methods - mods from CLI and file will be merged automatically:
+Extract mod lists from existing server configurations:
 
 ```bash
-node dist/index.js --mods "59F0B6EA44FA0442" --mod-list-file "additional-mods.txt"
-```
+# Extract to stdout (JSON format)
+npx redsmith extract mods server.json
 
-**Important Notes:**
-- Mod IDs must be 16-character hexadecimal strings
-- Duplicate mod IDs are automatically removed
-- Invalid mod IDs will be ignored with a warning
-- Mod IDs can be copied directly from the Reforger Workshop page for the mod
+# Extract to file with format detection
+npx redsmith extract mods server.json mods.txt
+npx redsmith extract mods server.json mods.csv
 
-## Configuration Steps
-
-The wizard will guide you through:
-
-1. **Basic Server Settings**
-   - Server name
-   - Bind address (IP to bind to)
-   - Bind port (main server port)
-
-2. **Scenario Selection**
-   - Choose from official Arma Reforger scenarios
-   - Conflict, Combat Ops, and Game Master modes
-
-3. **Mission Header Settings**
-   - Mission name
-   - Mission author
-   - Save file name
-
-4. **Output Configuration**
-   - Specify where to save the configuration file
-
-## Example Output
-
-The wizard generates a complete `server.json` file that can be used directly with an Arma Reforger dedicated server.
-
-## Supported Scenarios
-
-- Conflict (Everon, Northern Everon, Southern Everon, Western Everon, Montignac, Arland)
-- Combat Ops (Arland, Everon)
-- Game Master (Everon, Arland)
-
-## Validation
-
-Redsmith includes built-in validation capabilities:
-
-```bash
-# Validate any configuration file
-npx redsmith validate path/to/server.json
-
-# With debug output for troubleshooting
-npx redsmith validate path/to/server.json --debug
+# Specify output format
+npx redsmith extract mods server.json --output yaml
 ```
 
 ## Requirements
 
-- Node.js 22+ for optimal compatibility
-- reforger-types library
+- Node.js (any recent version)
+- Internet connection for npx to download redsmith
 
