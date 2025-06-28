@@ -182,7 +182,7 @@ function main() {
       '--bind-address', '0.0.0.0',
       '--public-address', '192.168.1.100',
       '--port', '2001',
-      '--output', testFile,  // This should be ignored when -- is used
+      '--output-file', testFile,  // This should be ignored when -- is used
       '--yes',
       '--'
     ].join(' ');
@@ -210,7 +210,7 @@ function main() {
       '--bind-address', '0.0.0.0',
       '--public-address', '192.168.1.100',
       '--port', '2001',
-      '--output', testNormalFile,
+      '--output-file', testNormalFile,
       '--yes'
     ].join(' ');
 

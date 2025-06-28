@@ -52,7 +52,7 @@ function main() {
 
     console.log('✅ Test 1: Valid config with --validate should succeed');
     const validResult = runCommand(
-      'node dist/index.js --name "Valid Test Server" --bind-address "0.0.0.0" --public-address "192.168.1.100" --port 2001 --scenario "conflict-everon" --output "./test-validate-valid.json" --yes --validate',
+      'node dist/index.js --name "Valid Test Server" --bind-address "0.0.0.0" --public-address "192.168.1.100" --port 2001 --scenario "conflict-everon" --output-file "./test-validate-valid.json" --yes --validate',
       true
     );
     
@@ -68,7 +68,7 @@ function main() {
     
     console.log('✅ Test 2: Invalid config with --validate should fail');
     const invalidResult = runCommand(
-      'node dist/index.js --name "Invalid Test Server" --bind-address "0.0.0.0" --public-address "192.168.1.100" --port -1 --scenario "conflict-everon" --output "./test-validate-invalid.json" --yes --validate',
+      'node dist/index.js --name "Invalid Test Server" --bind-address "0.0.0.0" --public-address "192.168.1.100" --port -1 --scenario "conflict-everon" --output-file "./test-validate-invalid.json" --yes --validate',
       false
     );
     
@@ -85,7 +85,7 @@ function main() {
     
     console.log('✅ Test 3: --validate with --force should work');
     const forceResult = runCommand(
-      'node dist/index.js --name "Force Test Server" --bind-address "0.0.0.0" --public-address "192.168.1.100" --port 2002 --scenario "conflict-everon" --output "./test-validate-valid.json" --yes --force --validate',
+      'node dist/index.js --name "Force Test Server" --bind-address "0.0.0.0" --public-address "192.168.1.100" --port 2002 --scenario "conflict-everon" --output-file "./test-validate-valid.json" --yes --force --validate',
       true
     );
     

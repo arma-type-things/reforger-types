@@ -53,7 +53,7 @@ async function main() {
 
     console.log('✅ Test 1: Default crossplay enabled');
     const enabledResult = runCommand(
-      'node dist/index.js --name "Crossplay Enabled Server" --bind-address "0.0.0.0" --public-address "192.168.1.100" --port 2001 --scenario "conflict-everon" --output "./test-crossplay-enabled.json" --yes',
+      'node dist/index.js --name "Crossplay Enabled Server" --bind-address "0.0.0.0" --public-address "192.168.1.100" --port 2001 --scenario "conflict-everon" --output-file "./test-crossplay-enabled.json" --yes',
       true
     );
     
@@ -75,7 +75,7 @@ async function main() {
 
     console.log('✅ Test 2: Explicitly disabled crossplay');
     const disabledResult = runCommand(
-      'node dist/index.js --name "Crossplay Disabled Server" --bind-address "0.0.0.0" --public-address "192.168.1.100" --port 2001 --scenario "conflict-everon" --output "./test-crossplay-disabled.json" --no-cross-platform --yes',
+      'node dist/index.js --name "Crossplay Disabled Server" --bind-address "0.0.0.0" --public-address "192.168.1.100" --port 2001 --scenario "conflict-everon" --output-file "./test-crossplay-disabled.json" --no-cross-platform --yes',
       true
     );
     

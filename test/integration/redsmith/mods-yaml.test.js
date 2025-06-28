@@ -27,7 +27,7 @@ async function runRedsmithTest(testName, args, expectedModIds, expectedModCount)
       '--public-address', '127.0.0.1',
       '--port', '2001',
       '--scenario', 'conflict-everon',
-      '--output', outputFile,
+      '--output-file', outputFile,
       '--yes',
       ...args
     ];

@@ -24,7 +24,7 @@ const child = spawn('node', [
   '--mission-name', 'Test Mission',
   '--mission-author', 'Test Author',
   '--save-file', 'testSave',
-  '--output', OUTPUT_FILE,
+  '--output-file', OUTPUT_FILE,
   '--mods', '59F0B6EA44FA0442,INVALID123,A123B456C789DEF0,TOOLONG1234567890,SHORT'
 ], {
   stdio: ['pipe', 'pipe', 'pipe']
