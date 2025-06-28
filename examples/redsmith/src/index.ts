@@ -13,7 +13,7 @@ import {
   type WizardConfig,
   type ValidateConfig,
   type ExtractConfig,
-  type ExtractModsOptions,
+  type ExtractOptions,
   parseFileContentType,
   resolveOutputFormat
 } from './types.js';
@@ -82,7 +82,7 @@ function createWizardConfig(options: CliOptions): WizardConfig {
       missionName: options.missionName,
       missionAuthor: options.missionAuthor,
       saveFileName: options.saveFile,
-      outputPath: options.output,
+      outputPath: options.outputFile,
       mods: parseModIds(options.mods),
       modListFile: options.modListFile,
       crossPlatform: options.crossPlatform,
@@ -104,7 +104,7 @@ function createValidateConfig(configFile: string, options: { debug?: boolean }):
 }
 
 // Create ExtractConfig from command arguments
-function createExtractConfig(configFile: string, outputFile: string | undefined, options: ExtractModsOptions): ExtractConfig {
+function createExtractConfig(configFile: string, outputFile: string | undefined, options: ExtractOptions): ExtractConfig {
   return {
     command: BaseCommand.EXTRACT,
     configFile,
@@ -156,7 +156,7 @@ export function extractModsFromConfig(serverConfig: ServerConfig): Mod[] {
 }
 
 // Extract mods command handler
-async function runExtractMods(configFile: string, outputFile: string | undefined, options: ExtractModsOptions): Promise<void> {
+async function runExtractMods(configFile: string, outputFile: string | undefined, options: ExtractOptions): Promise<void> {
   try {
     const extractConfig = createExtractConfig(configFile, outputFile, options);
     
@@ -226,7 +226,7 @@ function setupCli(): void {
     .option('-p, --public-address <address>', 'public address') 
     .option('--port <port>', 'bind port', (value) => parseInt(value))
     .option('-s, --scenario <scenario>', 'scenario (conflict-everon, conflict-arland, etc.)')
-    .option('-o, --output <path>', 'output file path')
+    .option('-t, --output-file <path>', 'output file path')
     .option('--mission-name <name>', 'mission name')
     .option('--mission-author <author>', 'mission author')
     .option('--save-file <filename>', 'save file name')
@@ -262,7 +262,8 @@ function setupCli(): void {
   // Extract command with sub-commands
   const extractCommand = program
     .command('extract')
-    .description('Extract information from server configuration files');
+    .description('Extract information from server configuration files')
+    .option('-o, --output <format>', 'Output format (json, yaml, csv, text)');
 
   // Extract mods sub-command
   extractCommand
@@ -270,16 +271,19 @@ function setupCli(): void {
     .description('Extract mod list from a server configuration file')
     .argument('<config-file>', 'Path to the server configuration JSON file')
     .argument('[output-file]', 'Output file path (omit for stdout)')
-    .option('-o, --output <format>', 'Output format (json, yaml, csv, text)')
-    .action(async (configFile: string, outputFile: string | undefined, options: { output?: string }) => {
+    .action(async (configFile: string, outputFile: string | undefined, options: { output?: string }, command: Command) => {
       // Validate and parse the format option
-      let parsedOptions: ExtractModsOptions = {};
+      let parsedOptions: ExtractOptions = {};
       
-      if (options.output) {
-        const parsedFormat = parseFileContentType(options.output);
+      // Get output option from parent command
+      const parentOptions = command.parent?.opts() as { output?: string } | undefined;
+      const outputFormat = options.output || parentOptions?.output;
+      
+      if (outputFormat) {
+        const parsedFormat = parseFileContentType(outputFormat);
         if (!parsedFormat) {
           const layout = new LayoutManager();
-          layout.printError(`Invalid output format: ${options.output}. Valid formats: json, yaml, csv, text`);
+          layout.printError(`Invalid output format: ${outputFormat}. Valid formats: json, yaml, csv, text`);
           process.exit(1);
         }
         parsedOptions.output = parsedFormat;

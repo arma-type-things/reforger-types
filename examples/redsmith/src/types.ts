@@ -41,7 +41,7 @@ export interface ExtractConfig extends BaseConfig {
   command: BaseCommand.EXTRACT;
   configFile: string;
   outputFile?: string;
-  options: ExtractModsOptions;
+  options: ExtractOptions;
 }
 
 // Union type for all possible command configurations
@@ -54,7 +54,7 @@ export interface CliOptions {
   publicAddress?: string;
   port?: number;
   scenario?: string;
-  output?: string;
+  outputFile?: string;
   missionName?: string;
   missionAuthor?: string;
   saveFile?: string;
@@ -69,12 +69,12 @@ export interface CliOptions {
 
 // Extract mods command options interface
 export interface ExtractModsOptions {
-  output?: FileContentType;
   stdout?: boolean;
 }
 
 // Extract command options interface (for future subcommands)
 export interface ExtractOptions {
+  output?: FileContentType;
   mods?: ExtractModsOptions;
 }
 
