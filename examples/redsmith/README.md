@@ -51,7 +51,7 @@ Available options:
 - `--mission-author <author>` - Mission author
 - `--save-file <filename>` - Save file name
 - `--mods <mods>` - Comma-separated list of mod IDs (16-character hex strings)
-- `--mod-list-file <path>` - Path to file containing mod IDs (supports JSON, text, and CSV formats)
+- `--mod-list-file <path>` - Path to file containing mod IDs (supports JSON, YAML, text, and CSV formats)
 - `--output <path>` - Output file path
 - `--yes` - Skip confirmation prompt and proceed automatically
 - `--force` - Allow overwriting existing files and skip confirmation
@@ -107,6 +107,7 @@ node dist/index.js --mod-list-file "path/to/my-mods.json"
 
 **Supported File Formats:**
 - [x] **JSON** - Array of mod objects with optional metadata
+- [x] **YAML** - YAML format with optional metadata (supports both .yaml and .yml extensions)
 - [x] **Text** - Line-separated mod IDs (one per line)
 - [ ] **CSV** - Comma-separated values (planned)
 
@@ -123,6 +124,17 @@ node dist/index.js --mod-list-file "path/to/my-mods.json"
     "modId": "A123B456C789DEF0"
   }
 ]
+```
+
+**YAML Format Example:**
+```yaml
+- modId: "59F0B6EA44FA0442"
+  name: "My Favorite Mod"
+  version: "1.0.0"
+  required: true
+  
+- modId: "A123B456C789DEF0"
+  # This mod has minimal metadata
 ```
 
 **Text Format Example:**

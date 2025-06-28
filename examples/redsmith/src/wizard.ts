@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import * as yaml from 'js-yaml';
 import prompts from 'prompts';
 import { 
   createDefaultServerConfig,
@@ -28,6 +29,7 @@ import {
 enum FileContentType {
   TEXT = 'text',
   JSON = 'json',
+  YAML = 'yaml',
   CSV = 'csv'
 }
 
@@ -41,6 +43,9 @@ function getFileContentType(filePath: string): FileContentType {
   switch (extension) {
     case '.json':
       return FileContentType.JSON;
+    case '.yaml':
+    case '.yml':
+      return FileContentType.YAML;
     case '.csv':
       return FileContentType.CSV;
     default:
@@ -49,44 +54,54 @@ function getFileContentType(filePath: string): FileContentType {
 }
 
 /**
- * Parse JSON content for mod list
- * Returns empty list on parse errors or if no valid mods found
+ * Parse JSON/YAML content for mod list
+ * Tries JSON first, falls back to YAML on parse failure
+ * Returns empty list if neither format works or no valid mods found
  */
-function jsonModListParser(content: string): Mod[] {
+function yamlJsonModListParser(content: string): Mod[] {
+  let parsed: any;
+  
+  // Try JSON first
   try {
-    const parsed = JSON.parse(content);
-    const mods: Mod[] = [];
-    
-    // Handle array of objects
-    if (Array.isArray(parsed)) {
-      for (const item of parsed) {
-        if (typeof item === 'object' && item !== null && typeof item.modId === 'string') {
-          const mod: Mod = { modId: item.modId };
-          
-          // Only add optional properties if they exist and are valid
-          if (typeof item.name === 'string') mod.name = item.name;
-          if (typeof item.version === 'string') mod.version = item.version;
-          if (typeof item.required === 'boolean') mod.required = item.required;
-          
-          mods.push(mod);
-        }
+    parsed = JSON.parse(content);
+  } catch {
+    // JSON failed, try YAML
+    try {
+      parsed = yaml.load(content);
+    } catch {
+      return [];
+    }
+  }
+  
+  const mods: Mod[] = [];
+  
+  // Handle array of objects
+  if (Array.isArray(parsed)) {
+    for (const item of parsed) {
+      if (typeof item === 'object' && item !== null && typeof (item as any).modId === 'string') {
+        const mod: Mod = { modId: (item as any).modId };
+        
+        // Only add optional properties if they exist and are valid
+        if (typeof (item as any).name === 'string') mod.name = (item as any).name;
+        if (typeof (item as any).version === 'string') mod.version = (item as any).version;
+        if (typeof (item as any).required === 'boolean') mod.required = (item as any).required;
+        
+        mods.push(mod);
       }
     }
-    // Handle single object
-    else if (typeof parsed === 'object' && parsed !== null && typeof parsed.modId === 'string') {
-      const mod: Mod = { modId: parsed.modId };
-      
-      if (typeof parsed.name === 'string') mod.name = parsed.name;
-      if (typeof parsed.version === 'string') mod.version = parsed.version;
-      if (typeof parsed.required === 'boolean') mod.required = parsed.required;
-      
-      mods.push(mod);
-    }
-    
-    return mods;
-  } catch {
-    return [];
   }
+  // Handle single object
+  else if (typeof parsed === 'object' && parsed !== null && typeof (parsed as any).modId === 'string') {
+    const mod: Mod = { modId: (parsed as any).modId };
+    
+    if (typeof (parsed as any).name === 'string') mod.name = (parsed as any).name;
+    if (typeof (parsed as any).version === 'string') mod.version = (parsed as any).version;
+    if (typeof (parsed as any).required === 'boolean') mod.required = (parsed as any).required;
+    
+    mods.push(mod);
+  }
+  
+  return mods;
 }
 
 /**
@@ -137,7 +152,8 @@ function loadModListFromFile(filePath: string): Mod[] {
     
     switch (fileType) {
       case FileContentType.JSON:
-        return jsonModListParser(content);
+      case FileContentType.YAML:
+        return yamlJsonModListParser(content);
       case FileContentType.CSV:
         return csvModListParser(content);
       case FileContentType.TEXT:
