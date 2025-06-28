@@ -109,7 +109,7 @@ node dist/index.js --mod-list-file "path/to/my-mods.json"
 - [x] **JSON** - Array of mod objects with optional metadata
 - [x] **YAML** - YAML format with optional metadata (supports both .yaml and .yml extensions)
 - [x] **Text** - Line-separated mod IDs (one per line)
-- [ ] **CSV** - Comma-separated values (planned)
+- [x] **CSV** - Comma-separated values with headers
 
 **JSON Format Example:**
 ```json
@@ -142,6 +142,14 @@ node dist/index.js --mod-list-file "path/to/my-mods.json"
 59F0B6EA44FA0442
 A123B456C789DEF0
 DEADBEEFDEADBEEF
+```
+
+**CSV Format Example:**
+```csv
+modId,name,version,required
+59F0B6EA44FA0442,My Favorite Mod,1.0.0,true
+A123B456C789DEF0,Another Great Mod,2.1.0,false
+DEADBEEFDEADBEEF,Essential Mod,,true
 ```
 
 #### Combining Sources

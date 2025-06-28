@@ -130,11 +130,68 @@ function textModListParser(content: string): Mod[] {
 
 /**
  * Parse CSV content for mod list
+ * Expects header row: modId,name,version,required
  * Returns empty list if no valid mod IDs found
  */
 function csvModListParser(content: string): Mod[] {
-  // TODO: Implement CSV parsing logic
-  return [];
+  try {
+    const lines = content.split(/\r?\n/)
+      .map(line => line.replace(/\r$/, '').trim())
+      .filter(line => line.length > 0);
+    
+    if (lines.length < 2) {
+      // Need at least header + one data row
+      return [];
+    }
+    
+    const headerLine = lines[0].toLowerCase();
+    const expectedHeaders = ['modid', 'name', 'version', 'required'];
+    const headers = headerLine.split(',').map(h => h.trim().toLowerCase());
+    
+    // Verify we have at least modId column
+    const modIdIndex = headers.indexOf('modid');
+    if (modIdIndex === -1) {
+      return [];
+    }
+    
+    // Find optional column indices
+    const nameIndex = headers.indexOf('name');
+    const versionIndex = headers.indexOf('version');
+    const requiredIndex = headers.indexOf('required');
+    
+    const mods: Mod[] = [];
+    
+    // Process data rows (skip header)
+    for (let i = 1; i < lines.length; i++) {
+      const values = lines[i].split(',').map(v => v.trim());
+      
+      if (values.length > modIdIndex && values[modIdIndex]) {
+        const modIdValue = values[modIdIndex].replace(/['"]/g, ''); // Remove quotes
+        
+        if (isValidModId(modIdValue)) {
+          const mod: Mod = { modId: modIdValue.toUpperCase() };
+          
+          // Add optional fields if they exist and have values
+          if (nameIndex >= 0 && values[nameIndex]) {
+            mod.name = values[nameIndex].replace(/['"]/g, '');
+          }
+          if (versionIndex >= 0 && values[versionIndex]) {
+            mod.version = values[versionIndex].replace(/['"]/g, '');
+          }
+          if (requiredIndex >= 0 && values[requiredIndex]) {
+            const reqValue = values[requiredIndex].replace(/['"]/g, '').toLowerCase();
+            mod.required = reqValue === 'true' || reqValue === '1';
+          }
+          
+          mods.push(mod);
+        }
+      }
+    }
+    
+    return mods;
+  } catch {
+    return [];
+  }
 }
 
 /**

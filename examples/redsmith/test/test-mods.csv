@@ -1,0 +1,4 @@
+modId,name,version,required
+591AF5BDA9F7CE8B,CSV Test Mod Alpha,1.0.0,true
+5A5A5A5A5A5A5A5A,CSV Test Mod Beta,2.1.5,false
+DEADBEEFDEADBEEF,CSV Test Mod Gamma,,true
