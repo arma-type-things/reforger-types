@@ -36,7 +36,8 @@
     "test:integration": "node test/integration/run-all.js",
     "test:prep": "node tools/prep-all-examples.js",
     "test:prep-revert": "node tools/prep-all-examples.js --revert",
-    "test:suite": "npm run test:prep && npm run test:node && npm run test:bun && npm run test:integration && npm run test:prep-revert"
+    "test:suite": "npm run test:prep && npm run test:node && npm run test:bun && npm run test:integration && npm run test:prep-revert",
+    "release:finalize": "node tools/finalize-release.js"
   },
   "keywords": [
     "arma",
