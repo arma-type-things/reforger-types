@@ -167,9 +167,9 @@ describe('New Properties from Wiki', () => {
     expect(gameProperties.VONCanTransmitCrossFaction).toBe(false); // Wiki default: false
   });
 
-  test('serverMinGrassDistance updated to wiki default', () => {
+  test('serverMinGrassDistance updated to engine minimum', () => {
     const gameProperties = server.createDefaultGameProperties();
-    expect(gameProperties.serverMinGrassDistance).toBe(0); // Wiki default: 0 (updated from 50)
+    expect(gameProperties.serverMinGrassDistance).toBe(50); // Engine minimum: 50 (was 0 in wiki)
   });
 
   test('serverMaxViewDistance updated to wiki default', () => {

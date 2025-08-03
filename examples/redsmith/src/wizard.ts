@@ -22,7 +22,8 @@ import {
   CrossPlayStep,
   ScenarioStep,
   MissionHeaderStep,
-  OutputStep
+  OutputStep,
+  RconPasswordStep
 } from './wizard-steps.js';
 
 /**
@@ -60,6 +61,7 @@ export class RedsmithWizard {
       new CrossPlayStep(),
       new ScenarioStep(),
       // new MissionHeaderStep(), // Disabled for now - mission header fields are optional
+      new RconPasswordStep(),
       new OutputStep()
     ];
   }
@@ -96,7 +98,7 @@ export class RedsmithWizard {
       this.config.bindAddress,
       this.config.bindPort,
       this.config.crossPlatform ?? true, // Default to true for redsmith
-      '' // rconPassword - keeping empty for now
+      this.config.rconPassword ?? 'admin123' // Default RCON password for --yes mode
     );
 
     // Set the public address

@@ -17,6 +17,7 @@ export interface RedsmithConfig {
   mods?: Mod[];
   modListFile?: string;
   crossPlatform?: boolean;
+  rconPassword?: string;
   yes?: boolean;
   force?: boolean;
   validate?: boolean;
@@ -350,6 +351,40 @@ export class OutputStep extends BaseWizardStep {
   async execute(config: RedsmithConfig, layout: LayoutManager): Promise<void> {
     layout.printSectionHeader('💾 Output Configuration');
     config.outputPath = await this.promptFilePath('Output file path', './server.json');
+    layout.printLine();
+  }
+}
+
+export class RconPasswordStep extends BaseWizardStep {
+  constructor() { super('RCON Configuration'); }
+
+  isRequired(config: RedsmithConfig): boolean {
+    // Always required since engine now mandates RCON password
+    return !config.rconPassword;
+  }
+
+  async execute(config: RedsmithConfig, layout: LayoutManager): Promise<void> {
+    layout.printSectionHeader('🔐 RCON Configuration');
+    layout.print('RCON remote administration is required by the game engine.', 'bodyColor');
+    layout.print('Password must be at least 3 characters with no spaces.', 'bodyColor');
+    layout.printLine();
+
+    const response = await prompts({
+      type: 'password',
+      name: 'value',
+      message: 'RCON password (minimum 3 characters):',
+      validate: (value: string) => {
+        if (value.length < 3) return 'RCON password must be at least 3 characters';
+        if (value.includes(' ')) return 'RCON password cannot contain spaces';
+        return true;
+      }
+    });
+
+    if (response.value === undefined) {
+      this.handleUndefinedResponse();
+    }
+
+    config.rconPassword = response.value;
     layout.printLine();
   }
 }

@@ -188,15 +188,14 @@ export class Validator {
       });
     }
 
-    // Grass distance must be 0 or between 50-150
-    if (gameProperties.serverMinGrassDistance !== 0 && 
-        (gameProperties.serverMinGrassDistance < 50 || gameProperties.serverMinGrassDistance > 150)) {
+    // Grass distance must be between 50-150 (engine requirement)
+    if (gameProperties.serverMinGrassDistance < 50 || gameProperties.serverMinGrassDistance > 150) {
       validationErrors.push({
         type: ParserErrorType.GRASS_DISTANCE_INVALID,
-        message: `Grass distance must be 0 or between 50 and 150. Current value: ${gameProperties.serverMinGrassDistance}`,
+        message: `Grass distance must be between 50 and 150. Current value: ${gameProperties.serverMinGrassDistance}`,
         field: 'game.gameProperties.serverMinGrassDistance',
         value: gameProperties.serverMinGrassDistance,
-        validRange: '0 | 50-150'
+        validRange: '50-150'
       });
     }
   }
