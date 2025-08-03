@@ -59,7 +59,7 @@ export function createDefaultRconConfig(basePort: number, password: string = "")
 export function createDefaultGameProperties(): GameProperties {
   return {
     serverMaxViewDistance: 1600,  // Wiki default: 1600
-    serverMinGrassDistance: 0,    // Wiki default: 0
+    serverMinGrassDistance: 50,   // Engine minimum: 50 (was 0 in wiki)
     networkViewDistance: 1500,    // Wiki default: 1500
     disableThirdPerson: false,
     fastValidation: true,         // Wiki default: true (since 0.9.6)
